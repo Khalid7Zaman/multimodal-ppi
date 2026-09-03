@@ -1,0 +1,7 @@
+Pipeline connection test.
+
+If you can read this file on the cluster, the full sync path works:
+Claude  ->  local folder  ->  Gitee  ->  cluster
+
+Created: 2026-09-03
+Project: multimodal-ppi
