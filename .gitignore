@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+env/
+
+# Data and trained models (keep large files out of the repo)
+data/
+datasets/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.h5
+*.npy
+*.npz
+
+# Logs and job outputs
+logs/
+outputs/
+wandb/
+*.log
+slurm-*.out
+
+# OS
+.DS_Store
