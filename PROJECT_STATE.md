@@ -46,7 +46,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 
 ## 6. Phased plan
 - Phase 0 — Environment and baseline. Install `torch 2.7.1+cu128` and ESM on the cluster. Reproduce
-  the PLM-interact baseline on a small dataset. Submit through SLURM.
+  the PLM-interact baseline on a small dataset. Submit through SLURM. **— DONE (2026-09-09).**
 - Phase 1 — Data assembly (public PPI datasets + PDBbind).
 - Phase 2 — Core interaction model (sequence + cross-attention).
 - Phase 3 — Add structural (PDBbind) and evolutionary modules.
@@ -57,8 +57,12 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 ## 7. Current status
 - Proposal written (v10) and shared with supervisor.
 - Scope, data source, compute, and software versions confirmed with supervisor.
-- Infrastructure set up and tested (repo, cluster, and laptop in sync).
-- Next: Phase 0 (environment setup) — not started.
+- Infrastructure set up and tested (repo, cluster, and laptop in sync; mirrored on Gitee and GitHub).
+- **Phase 0 COMPLETE (2026-09-09):** environment built on the cluster (conda env `mmppi`,
+  Python 3.10, `torch 2.7.1+cu128`) and the PLM-interact baseline reproduced end to end. On the
+  D-SCRIPT human test set (52,725 pairs): **AUROC 0.9885, AUPR 0.9174** — well above the D-SCRIPT
+  (~0.55) and Topsy-Turvy (~0.58–0.61) AUPR baselines. Scripts under `phase0_baseline/`.
+- Next: Phase 1 — data assembly (public PPI datasets + PDBbind).
 
 ## 8. Decisions log
 - 2026-09-09 — Scope set to protein–protein interaction and binding affinity. PDBbind chosen for
@@ -69,3 +73,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 - 2026-09-09 — Compute confirmed: SLURM scheduler; GPU05 (RTX 6000D) reserved for model training;
   general tasks on CPU03/05/06 and GPU03/04/06–10. Environment: `torch 2.7.1+cu128`; prefer ESM-3.
   No in-house data or wet-lab validation yet. (Prof. Sun)
+- 2026-09-09 — Phase 0 complete. Cluster environment built (conda env `mmppi`, Python 3.10,
+  `torch 2.7.1+cu128`; Blackwell RTX 50-series require CUDA 12.8). PLM-interact-650M reproduced on
+  the D-SCRIPT human test set: AUROC 0.9885 / AUPR 0.9174. Baseline scripts committed under
+  `phase0_baseline/`; repo mirrored on Gitee and GitHub. (K. Zaman)
