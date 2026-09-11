@@ -2,7 +2,7 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, and on the cluster. Last updated: 2026-09-09.
+on Gitee, and on the cluster. Last updated: 2026-09-11.
 
 ## 1. Project summary
 A multimodal deep-learning model for protein–protein interaction. From the sequences of two
@@ -47,7 +47,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 ## 6. Phased plan
 - Phase 0 — Environment and baseline. Install `torch 2.7.1+cu128` and ESM on the cluster. Reproduce
   the PLM-interact baseline on a small dataset. Submit through SLURM. **— DONE (2026-09-09).**
-- Phase 1 — Data assembly (public PPI datasets + PDBbind).
+- Phase 1 — Data assembly (public PPI datasets + PDBbind). **— DONE (2026-09-11).**
 - Phase 2 — Core interaction model (sequence + cross-attention).
 - Phase 3 — Add structural (PDBbind) and evolutionary modules.
 - Phase 4 — Add binding-affinity and interface heads.
@@ -62,7 +62,13 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   Python 3.10, `torch 2.7.1+cu128`) and the PLM-interact baseline reproduced end to end. On the
   D-SCRIPT human test set (52,725 pairs): **AUROC 0.9885, AUPR 0.9174** — well above the D-SCRIPT
   (~0.55) and Topsy-Turvy (~0.58–0.61) AUPR baselines. Scripts under `phase0_baseline/`.
-- Next: Phase 1 — data assembly (public PPI datasets + PDBbind).
+- **Phase 1 COMPLETE (2026-09-11):** training data assembled from public sources.
+  Interaction — Bernett gold standard (leakage-free): 163,192 / 59,260 / 52,048 balanced
+  train/val/test pairs. Affinity — PPB-Affinity (filtered): 6,485 / 965 / 757 complexes with pKd.
+  Interface — ~5,400 complexes with per-residue interface labels (5 Å contacts from RCSB
+  structures). Raw data on the cluster under `~/Projects/ppi-data/`; scripts + data README under
+  `phase1/` (see phase1/DATA_README.md).
+- Next: Phase 2 — core interaction model (sequence + cross-attention).
 
 ## 8. Decisions log
 - 2026-09-09 — Scope set to protein–protein interaction and binding affinity. PDBbind chosen for
@@ -77,3 +83,10 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   `torch 2.7.1+cu128`; Blackwell RTX 50-series require CUDA 12.8). PLM-interact-650M reproduced on
   the D-SCRIPT human test set: AUROC 0.9885 / AUPR 0.9174. Baseline scripts committed under
   `phase0_baseline/`; repo mirrored on Gitee and GitHub. (K. Zaman)
+- 2026-09-11 — Phase 1 complete. Interaction data = Bernett gold standard (leakage-free, via
+  Synthyra/bernett_gold_ppi on Hugging Face). Affinity data = PPB-Affinity filtered set (via
+  proteinea/ppb_affinity on Hugging Face), which aggregates PDBbind's protein-protein complexes
+  plus SKEMPI and others — chosen as the public route to PPI affinities because PDBbind's PP
+  subset is now partly behind PDBbind+. Interface residues derived from RCSB structures (5 Å
+  inter-chain contacts); ~5,400 complexes labeled. Raw data kept off git under ~/Projects/ppi-data/;
+  scripts + DATA_README committed under phase1/. (K. Zaman)
