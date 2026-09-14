@@ -27,3 +27,4 @@ slurm-*.out
 
 # OS
 .DS_Store
+phase2/*.out

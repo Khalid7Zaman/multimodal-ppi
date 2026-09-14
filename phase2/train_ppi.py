@@ -86,6 +86,7 @@ def main():
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--overfit", action="store_true")
+    ap.add_argument("--log_every", type=int, default=100)
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -109,14 +110,16 @@ def main():
     lossf = nn.BCEWithLogitsLoss()
     best = -1.0
     for epoch in range(1, args.epochs + 1):
-        model.train(); t0 = time.time(); tot = 0.0; n = 0
+        model.train(); t0 = time.time(); tot = 0.0; n = 0; step = 0; nsteps = len(train_dl)
         for a_ids, a_mask, b_ids, b_mask, y in train_dl:
             a_ids, a_mask, b_ids, b_mask, y = (t.to(device) for t in (a_ids, a_mask, b_ids, b_mask, y))
             opt.zero_grad()
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 loss = lossf(model(a_ids, a_mask, b_ids, b_mask), y)
             loss.backward(); opt.step()
-            tot += loss.item() * len(y); n += len(y)
+            tot += loss.item() * len(y); n += len(y); step += 1
+            if step % args.log_every == 0:
+                print(f"  epoch {epoch} step {step}/{nsteps} | loss {loss.item():.4f} | {n/max(time.time()-t0,1e-6):.0f} pairs/s", flush=True)
         msg = f"epoch {epoch}: train_loss {tot/max(n,1):.4f} ({time.time()-t0:.0f}s)"
         if val_dl is not None:
             au, apr = evaluate(model, val_dl, device)
