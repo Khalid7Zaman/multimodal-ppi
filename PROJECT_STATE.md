@@ -2,7 +2,7 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, and on the cluster. Last updated: 2026-09-11.
+on Gitee, and on the cluster. Last updated: 2026-09-17.
 
 ## 1. Project summary
 A multimodal deep-learning model for protein–protein interaction. From the sequences of two
@@ -32,10 +32,11 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 - Repo: `multimodal-ppi` on GitHub and Gitee, synced to the cluster (`~/Projects/multimodal-ppi`) and the laptop.
 - Scheduler: the cluster uses **SLURM**. You submit a job and wait for it to finish.
 - Nodes: CPU03, CPU05, CPU06 and GPU03, GPU04, GPU06–GPU10 for general tasks. **GPU05 (RTX 6000D)
-  is reserved for model training**, so final training runs there.
-- GPU hardware: RTX 5090 (32 GB), RTX 6000D, RTX 5080, and RTX 5070 Ti (16 GB) cards.
+  is reserved for model training**, so final training runs there. Supervisor guidance: use the
+  RTX 6000D or the RTX 5090 for training/heavy work.
+- GPU hardware: RTX 5090 (32 GB), RTX 6000D (85 GB), RTX 5080, and RTX 5070 Ti (16 GB) cards.
 - Software: **PyTorch 2.7.1 with CUDA 12.8 (`torch 2.7.1+cu128`)**. Preferred protein language model is the newer ESM (ESM-3).
-- Codex is available on the cluster to run commands. Author: Khalid Zaman, Research Assistant Professor (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
+- Author: Khalid Zaman, Research Assistant Professor (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 
 ## 5. Data and validation (confirmed with supervisor)
 - No in-house lab data and no wet-lab validation system at this stage.
@@ -48,7 +49,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 - Phase 0 — Environment and baseline. Install `torch 2.7.1+cu128` and ESM on the cluster. Reproduce
   the PLM-interact baseline on a small dataset. Submit through SLURM. **— DONE (2026-09-09).**
 - Phase 1 — Data assembly (public PPI datasets + PDBbind). **— DONE (2026-09-11).**
-- Phase 2 — Core interaction model (sequence + cross-attention).
+- Phase 2 — Core interaction model (sequence + cross-attention). **— DONE (2026-09-17).**
 - Phase 3 — Add structural (PDBbind) and evolutionary modules.
 - Phase 4 — Add binding-affinity and interface heads.
 - Phase 5 — Benchmarking and ablations.
@@ -68,7 +69,19 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   Interface — ~5,400 complexes with per-residue interface labels (5 Å contacts from RCSB
   structures). Raw data on the cluster under `~/Projects/ppi-data/`; scripts + data README under
   `phase1/` (see phase1/DATA_README.md).
-- Next: Phase 2 — core interaction model (sequence + cross-attention).
+- **Phase 2 COMPLETE (2026-09-17):** core interaction model built and evaluated. `CrossAttnPPI` =
+  ESM-2 encoder (fine-tuned end-to-end) → 256-d projection → two-way cross-attention (A↔B) →
+  symmetric pooling `[vA+vB, vA*vB, |vA-vB|]` → MLP head; BCEWithLogits loss, AdamW, bf16.
+  Trained on the Bernett gold-standard interaction data at two encoder sizes on GPU05 (RTX 6000D).
+  Held-out test set (52,048 pairs): **35M model AUROC 0.7033 / AUPR 0.7017; 650M model
+  AUROC 0.7174 / AUPR 0.7093.** Both exceed the published Bernett baselines (~0.69 AUPR); the 650M
+  is best. Code under `phase2/` (train_ppi.py, eval_ppi.py, SLURM jobs train/eval + *_650M);
+  full write-up in `reports/PHASE2_SUMMARY.md`; checkpoints on the cluster under
+  `phase2/runs/ppi_35M_v1/` and `phase2/runs/ppi_650M_v1/` (best.pt/last.pt, kept off git).
+- **Next: Phase 3** — add the structural (PDBbind / RCSB residue-contact graphs) and evolutionary
+  (MSA) modules to the encoder. Note: the binding-affinity and interface heads are Phase 4, and the
+  data for both is already prepared (Phase 1), so Phase 4 could optionally be brought forward —
+  to confirm at Phase 3 kickoff with the supervisor.
 
 ## 8. Decisions log
 - 2026-09-09 — Scope set to protein–protein interaction and binding affinity. PDBbind chosen for
@@ -90,3 +103,10 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   subset is now partly behind PDBbind+. Interface residues derived from RCSB structures (5 Å
   inter-chain contacts); ~5,400 complexes labeled. Raw data kept off git under ~/Projects/ppi-data/;
   scripts + DATA_README committed under phase1/. (K. Zaman)
+- 2026-09-17 — Phase 2 complete. Built CrossAttnPPI (ESM-2 fine-tuned end-to-end + two-way
+  cross-attention + symmetric head; BCE, AdamW, bf16). Trained 35M and 650M encoders on the Bernett
+  gold standard (GPU05, RTX 6000D). Held-out test (52,048 pairs): 35M AUROC 0.7033 / AUPR 0.7017;
+  650M AUROC 0.7174 / AUPR 0.7093 — both above the ~0.69 published Bernett AUPR, 650M best. The
+  decision to fine-tune ESM-2 end-to-end (rather than freeze it) is supported by these results.
+  Code + summary committed and mirrored (Gitee, GitHub, laptop); checkpoints kept off git on the
+  cluster. (K. Zaman)
