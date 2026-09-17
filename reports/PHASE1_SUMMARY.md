@@ -1,6 +1,6 @@
 # Phase 1 — Data Assembly: Summary
 
-Author: Khalid Zaman (RA) · Supervisor: Prof. Zhaoxi Sun (SUAT) · 2026-09-11
+Author: Khalid Zaman, Research Assistant Professor (RAP) · Supervisor: Prof. Zhaoxi Sun (SUAT) · 2026-09-11
 
 Phase 1 assembled the training data for the model's three prediction tasks, all from public
 sources and fully reproducible from the scripts in phase1/.

@@ -1,6 +1,6 @@
 # Phase 0 — Environment and Baseline: Summary
 
-Author: Khalid Zaman (RA) · Supervisor: Prof. Zhaoxi Sun (SUAT) · 2026-09-09
+Author: Khalid Zaman, Research Assistant Professor (RAP) · Supervisor: Prof. Zhaoxi Sun (SUAT) · 2026-09-09
 
 Phase 0 settled one question before any model-building began: could we stand up a complete,
 reproducible deep-learning environment on the group's GPU cluster and prove it by reproducing

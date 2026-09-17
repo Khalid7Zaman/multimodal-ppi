@@ -1,6 +1,6 @@
 # Phase 0 — Environment setup & PLM-interact baseline
 
-Author: Khalid Zaman (RA) · Supervisor: Prof. Zhaoxi Sun (SUAT) · 2026-09-09
+Author: Khalid Zaman, Research Assistant Professor (RAP) · Supervisor: Prof. Zhaoxi Sun (SUAT) · 2026-09-09
 
 ## Goal
 Set up the GPU-cluster software environment and reproduce the published

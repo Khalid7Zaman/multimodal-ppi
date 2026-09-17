@@ -35,7 +35,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   is reserved for model training**, so final training runs there.
 - GPU hardware: RTX 5090 (32 GB), RTX 6000D, RTX 5080, and RTX 5070 Ti (16 GB) cards.
 - Software: **PyTorch 2.7.1 with CUDA 12.8 (`torch 2.7.1+cu128`)**. Preferred protein language model is the newer ESM (ESM-3).
-- Codex is available on the cluster to run commands. Author: Khalid Zaman (RA). Supervisor: Prof. Zhaoxi Sun, SUAT.
+- Codex is available on the cluster to run commands. Author: Khalid Zaman, Research Assistant Professor (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 
 ## 5. Data and validation (confirmed with supervisor)
 - No in-house lab data and no wet-lab validation system at this stage.
