@@ -10,7 +10,7 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 | File | What it is | Status |
 |------|------------|--------|
 | `struct_features.py` | **Structural module, part 1** — turn each PPB complex structure into a residue *contact graph* aligned to the sequence. Run `python phase3/struct_features.py` to self-test on real data. | ✅ built |
-| `struct_module.py` | Structural module, part 2 — the graph-network layers that consume the contact map + ESM-2 features. | ⏳ next |
+| `struct_module.py` | Structural module, part 2 — the GCN graph-network layers (`StructEncoder`) that consume the contact map + ESM-2 features. Run `python phase3/struct_module.py` to self-test. | ✅ built |
 | `evo_features.py` | **Evolutionary module** — build MSAs from UniRef50 with MMseqs2, turn them into per-residue conservation features. | ⏳ later |
 | `model.py` | The multi-task model: sequence + structure + evolution → cross-attention → interaction / affinity / interface heads. | ⏳ later |
 | `train_phase3.py` + `*.sbatch` | Training loop + SLURM jobs (sanity overfit first, then full run on GPU05). | ⏳ later |
@@ -18,7 +18,7 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 ## Progress checklist
 - [x] UniRef50 sequence source downloaded (`~/Projects/ppi-data/uniref50_hf`, 98 shards, ~17 GB) — feeds the evolutionary module
 - [x] Structural featurizer + self-test (`struct_features.py`)
-- [ ] Structural graph-network layers
+- [x] Structural graph-network layers (`struct_module.py`, `StructEncoder`)
 - [ ] MMseqs2 database build + MSA/conservation features
 - [ ] Multi-task model + training + evaluation
 
