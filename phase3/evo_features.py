@@ -115,7 +115,7 @@ def _self_test():
     print(f"gap fraction at position 7: {gap[7]:.2f}  (should be ~0.2 = 1 of 5)")
 
     # a3m parsing (lowercase insertions must be dropped)
-    a3m_lines = [">q", "ACDEF", ">h1", "ACDaEF", ">h2", "ACD-EF"]
+    a3m_lines = [">q", "ACDEF", ">h1", "ACDaEF", ">h2", "AC-EF"]  # h1 has an insertion 'a'; h2 a gap
     parsed = parse_a3m(a3m_lines)
     print(f"a3m parse: query-aligned lengths = {[len(s) for s in parsed]}  (all should equal 5)")
 
