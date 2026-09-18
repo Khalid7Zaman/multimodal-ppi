@@ -104,20 +104,24 @@ def featurize_complex(row, threshold=8.0):
     return out
 
 
-def _self_test(n=20, threshold=8.0):
+def _self_test(n=20, threshold=8.0, scan=80):
     csv = os.path.join(PPB, "ppb_train_iface.csv")
     df = pd.read_csv(csv)
     print(f"Reading: {csv}")
-    print(f"PPB train complexes : {len(df)}")
+    print(f"PPB train complexes : {len(df)} (quick check scans the first {scan})")
     print(f"contact threshold   : {threshold} A (C-alpha to C-alpha)\n")
 
     both_ok = 0
     densities = []
     shown = 0
+    scanned = 0
     for _, row in df.iterrows():
+        if scanned >= scan:
+            break
         feat = featurize_complex(row, threshold)
         if feat is None:
             continue
+        scanned += 1
         rec, lig = feat["receptor"], feat["ligand"]
         if rec["aligned"] and lig["aligned"]:
             both_ok += 1
@@ -129,12 +133,14 @@ def _self_test(n=20, threshold=8.0):
                       f"contacts/res={rec['A'].sum()/max(rec['n_res'],1):5.1f}  |  "
                       f"ligand seq={lig['seq_len']:4d} struct={lig['n_res']:4d}")
 
-    print(f"\nComplexes where BOTH proteins align (sequence length == structure residues): "
-          f"{both_ok} / {len(df)}")
+    print(f"\nOf the first {scanned} complexes scanned, BOTH proteins aligned "
+          f"(sequence length == structure residues) in {both_ok}.")
     if densities:
         d = np.array(densities)
         print(f"receptor contacts per residue: mean {d.mean():.1f}  (min {d.min():.1f}, "
               f"max {d.max():.1f}) - a real folded protein is typically ~6-12")
+    print("\nNote: full alignment coverage over all 6,485 complexes is ~60% (see phase1/DATA_README.md);")
+    print("complexes that don't line up 1:1 will simply skip the structural view (sequence still used).")
     print("\nOK: structural featurizer works on real PPB structures.")
 
 
@@ -142,5 +148,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Self-test the Phase 3 structural featurizer on PPB data.")
     ap.add_argument("--n", type=int, default=20, help="how many aligned examples to print")
     ap.add_argument("--threshold", type=float, default=8.0, help="C-alpha contact cutoff (angstrom)")
+    ap.add_argument("--scan", type=int, default=80, help="how many complexes to scan for the quick summary")
     args = ap.parse_args()
-    _self_test(args.n, args.threshold)
+    _self_test(args.n, args.threshold, args.scan)
