@@ -15,7 +15,7 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 | `collect_ppb_seqs.py` | **Evolutionary module, step 2** — de-duplicate PPB receptor/ligand sequences → `ppb_queries.fasta` (the proteins we need MSAs for). | ✅ built |
 | `msa_search.sh` + `.sbatch` | **Evolutionary module, step 3** — `mmseqs search` the 9,516 PPB proteins vs UniRef50 → one MSA (`.a3m`) per protein (SLURM CPU job). | ✅ built |
 | `evo_features.py` | **Evolutionary module, step 4** — read each MSA → per-residue conservation features (20 aa freqs + conservation + gap) + `ConservationEncoder`. Run `python phase3/evo_features.py` to self-test. | ✅ built |
-| `model.py` | The multi-task model: sequence + structure + evolution → cross-attention → interaction / affinity / interface heads. | ⏳ later |
+| `model.py` | The multi-task model `MultiModalPPI`: sequence + structure + evolution → cross-attention → interaction / affinity / interface heads. Run `python phase3/model.py` to self-test. | ✅ built |
 | `train_phase3.py` + `*.sbatch` | Training loop + SLURM jobs (sanity overfit first, then full run on GPU05). | ⏳ later |
 
 ## Progress checklist
