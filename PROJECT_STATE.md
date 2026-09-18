@@ -2,7 +2,12 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, and on the cluster. Last updated: 2026-09-17.
+on Gitee, on GitHub, and on the cluster. Last updated: 2026-09-18.
+
+**Related docs (in this repo):** `docs/PROPOSAL.md` (research proposal v10) ·
+`docs/ARCHITECTURE.md` (5-stage design + Phase 3/4 plan) · `WORKFLOW.md` (git sync cheat-sheet) ·
+`phase1/DATA_README.md` (datasets) · `reports/PHASE0_SUMMARY.md`, `PHASE1_SUMMARY.md`,
+`PHASE2_SUMMARY.md` (phase write-ups).
 
 ## 1. Project summary
 A multimodal deep-learning model for protein–protein interaction. From the sequences of two
@@ -29,7 +34,9 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 5. **Training on experimental data** — supervised on PDBbind affinities and public PPI datasets.
 
 ## 4. Infrastructure and environment (confirmed with supervisor)
-- Repo: `multimodal-ppi` on GitHub and Gitee, synced to the cluster (`~/Projects/multimodal-ppi`) and the laptop.
+- Repo: `multimodal-ppi`, synced across four places — cluster (`~/Projects/multimodal-ppi`),
+  laptop, **Gitee and GitHub**. `origin` now pushes to BOTH remotes at once (a single `git push`
+  updates Gitee and GitHub); see `WORKFLOW.md`.
 - Scheduler: the cluster uses **SLURM**. You submit a job and wait for it to finish.
 - Nodes: CPU03, CPU05, CPU06 and GPU03, GPU04, GPU06–GPU10 for general tasks. **GPU05 (RTX 6000D)
   is reserved for model training**, so final training runs there. Supervisor guidance: use the
@@ -50,15 +57,15 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   the PLM-interact baseline on a small dataset. Submit through SLURM. **— DONE (2026-09-09).**
 - Phase 1 — Data assembly (public PPI datasets + PDBbind). **— DONE (2026-09-11).**
 - Phase 2 — Core interaction model (sequence + cross-attention). **— DONE (2026-09-17).**
-- Phase 3 — Add structural (PDBbind) and evolutionary modules.
-- Phase 4 — Add binding-affinity and interface heads.
+- Phase 3 — Add structural (PDBbind) and evolutionary modules. **— IN PROGRESS (started 2026-09-18).**
+- Phase 4 — Add binding-affinity and interface heads. (Brought forward into Phase 3 — see §8.)
 - Phase 5 — Benchmarking and ablations.
 - Phase 6 — Manuscript and public code release.
 
 ## 7. Current status
-- Proposal written (v10) and shared with supervisor.
+- Proposal written (v10, in `docs/PROPOSAL.md`) and shared with supervisor.
 - Scope, data source, compute, and software versions confirmed with supervisor.
-- Infrastructure set up and tested (repo, cluster, and laptop in sync; mirrored on Gitee and GitHub).
+- Infrastructure set up and tested (repo synced across cluster, laptop, Gitee, and GitHub).
 - **Phase 0 COMPLETE (2026-09-09):** environment built on the cluster (conda env `mmppi`,
   Python 3.10, `torch 2.7.1+cu128`) and the PLM-interact baseline reproduced end to end. On the
   D-SCRIPT human test set (52,725 pairs): **AUROC 0.9885, AUPR 0.9174** — well above the D-SCRIPT
@@ -78,10 +85,18 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   is best. Code under `phase2/` (train_ppi.py, eval_ppi.py, SLURM jobs train/eval + *_650M);
   full write-up in `reports/PHASE2_SUMMARY.md`; checkpoints on the cluster under
   `phase2/runs/ppi_35M_v1/` and `phase2/runs/ppi_650M_v1/` (best.pt/last.pt, kept off git).
-- **Next: Phase 3** — add the structural (PDBbind / RCSB residue-contact graphs) and evolutionary
-  (MSA) modules to the encoder. Note: the binding-affinity and interface heads are Phase 4, and the
-  data for both is already prepared (Phase 1), so Phase 4 could optionally be brought forward —
-  to confirm at Phase 3 kickoff with the supervisor.
+- **Phase 3 IN PROGRESS (started 2026-09-18):** adding the structural (contact-graph) and
+  evolutionary (MSA conservation) modules on the PPB-Affinity complexes, and bringing the Phase 4
+  affinity + interface heads forward (decided at kickoff — see §8). The interaction head stays the
+  Phase 2 sequence model. Done so far:
+  - Structural featurizer `phase3/struct_features.py` — builds per-protein C-alpha residue contact
+    graphs from the cached RCSB structures, aligned 1:1 to the sequence. Self-tested on real PPB
+    data: ~9 contacts/residue, ~60% of complexes align 1:1 (the rest fall back to sequence-only).
+  - UniRef50 sequence source downloaded for the MSA module
+    (`~/Projects/ppi-data/uniref50_hf`, 98 CSV shards, ~17 GB) via the HF mirror.
+  - MMseqs2 installed on the cluster (`~/Projects/tools/mmseqs/bin`).
+  - Next: structural graph-network layers (`phase3/struct_module.py`) → MMseqs2 DB + conservation
+    features → multi-task model + training (sanity overfit first, then GPU05).
 
 ## 8. Decisions log
 - 2026-09-09 — Scope set to protein–protein interaction and binding affinity. PDBbind chosen for
@@ -110,3 +125,14 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   decision to fine-tune ESM-2 end-to-end (rather than freeze it) is supported by these results.
   Code + summary committed and mirrored (Gitee, GitHub, laptop); checkpoints kept off git on the
   cluster. (K. Zaman)
+- 2026-09-18 — Phase 3 kickoff decisions. (1) Build the structural + evolutionary modules on the
+  PPB-Affinity complexes (where structures, affinities, and interface labels all co-exist) and bring
+  the Phase 4 affinity + interface heads FORWARD into this phase; the interaction head stays the
+  Phase 2 sequence model. Rationale: the 163k Bernett interaction pairs are sequence-only (no
+  structures; MSAs infeasible at that scale), while the ~6.5k PPB complexes have everything.
+  (2) Structural module built WITHOUT torch-geometric — a dense C-alpha residue contact map + plain
+  PyTorch graph layers — to avoid fragile compiled-extension installs on the CUDA 12.8 / Blackwell
+  stack. (3) Evolutionary module will use MMseqs2 (installed) + a local UniRef50 (downloaded via the
+  HF mirror, as the standard EU mirror is throttled from China) to build MSAs and per-residue
+  conservation. (4) Sync fixed: `origin` now pushes to Gitee AND GitHub (GitHub had been missed);
+  the GitHub token was regenerated after being exposed. (K. Zaman)
