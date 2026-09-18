@@ -14,7 +14,7 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 | `build_uniref_db.sh` + `.sbatch` | **Evolutionary module, step 1** — convert the 98 UniRef50 CSV shards → FASTA and `mmseqs createdb` to build the search database (SLURM CPU job). | ✅ built |
 | `collect_ppb_seqs.py` | **Evolutionary module, step 2** — de-duplicate PPB receptor/ligand sequences → `ppb_queries.fasta` (the proteins we need MSAs for). | ✅ built |
 | `msa_search.sh` + `.sbatch` | **Evolutionary module, step 3** — `mmseqs search` the 9,516 PPB proteins vs UniRef50 → one MSA (`.a3m`) per protein (SLURM CPU job). | ✅ built |
-| `evo_features.py` | **Evolutionary module, step 4** — read each MSA → per-residue conservation features + a small encoder. | ⏳ next |
+| `evo_features.py` | **Evolutionary module, step 4** — read each MSA → per-residue conservation features (20 aa freqs + conservation + gap) + `ConservationEncoder`. Run `python phase3/evo_features.py` to self-test. | ✅ built |
 | `model.py` | The multi-task model: sequence + structure + evolution → cross-attention → interaction / affinity / interface heads. | ⏳ later |
 | `train_phase3.py` + `*.sbatch` | Training loop + SLURM jobs (sanity overfit first, then full run on GPU05). | ⏳ later |
 
@@ -25,7 +25,9 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 - [x] UniRef50 database build job (`build_uniref_db.sh` / `.sbatch`)
 - [x] PPB query set (`collect_ppb_seqs.py` → 9,516 unique proteins)
 - [x] MSA search job (`msa_search.sh` / `.sbatch`)
-- [ ] Per-residue conservation features + encoder (`evo_features.py`)
+- [x] Per-residue conservation features + encoder (`evo_features.py`)
+- [ ] Run the DB build + MSA search on the cluster (jobs ready)
+- [ ] Multi-task model (`model.py`) + training
 - [ ] Multi-task model + training + evaluation
 
 ## How the structural data flows
