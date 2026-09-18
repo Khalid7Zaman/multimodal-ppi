@@ -13,7 +13,8 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 | `struct_module.py` | Structural module, part 2 — the GCN graph-network layers (`StructEncoder`) that consume the contact map + ESM-2 features. Run `python phase3/struct_module.py` to self-test. | ✅ built |
 | `build_uniref_db.sh` + `.sbatch` | **Evolutionary module, step 1** — convert the 98 UniRef50 CSV shards → FASTA and `mmseqs createdb` to build the search database (SLURM CPU job). | ✅ built |
 | `collect_ppb_seqs.py` | **Evolutionary module, step 2** — de-duplicate PPB receptor/ligand sequences → `ppb_queries.fasta` (the proteins we need MSAs for). | ✅ built |
-| `evo_features.py` | **Evolutionary module, step 2+** — search each PPB protein vs UniRef50 → MSA → per-residue conservation features. | ⏳ next |
+| `msa_search.sh` + `.sbatch` | **Evolutionary module, step 3** — `mmseqs search` the 9,516 PPB proteins vs UniRef50 → one MSA (`.a3m`) per protein (SLURM CPU job). | ✅ built |
+| `evo_features.py` | **Evolutionary module, step 4** — read each MSA → per-residue conservation features + a small encoder. | ⏳ next |
 | `model.py` | The multi-task model: sequence + structure + evolution → cross-attention → interaction / affinity / interface heads. | ⏳ later |
 | `train_phase3.py` + `*.sbatch` | Training loop + SLURM jobs (sanity overfit first, then full run on GPU05). | ⏳ later |
 
@@ -22,7 +23,9 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 - [x] Structural featurizer + self-test (`struct_features.py`)
 - [x] Structural graph-network layers (`struct_module.py`, `StructEncoder`)
 - [x] UniRef50 database build job (`build_uniref_db.sh` / `.sbatch`)
-- [ ] MSA search + per-residue conservation features (`evo_features.py`)
+- [x] PPB query set (`collect_ppb_seqs.py` → 9,516 unique proteins)
+- [x] MSA search job (`msa_search.sh` / `.sbatch`)
+- [ ] Per-residue conservation features + encoder (`evo_features.py`)
 - [ ] Multi-task model + training + evaluation
 
 ## How the structural data flows
