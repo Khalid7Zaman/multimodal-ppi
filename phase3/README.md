@@ -11,7 +11,8 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 |------|------------|--------|
 | `struct_features.py` | **Structural module, part 1** — turn each PPB complex structure into a residue *contact graph* aligned to the sequence. Run `python phase3/struct_features.py` to self-test on real data. | ✅ built |
 | `struct_module.py` | Structural module, part 2 — the GCN graph-network layers (`StructEncoder`) that consume the contact map + ESM-2 features. Run `python phase3/struct_module.py` to self-test. | ✅ built |
-| `evo_features.py` | **Evolutionary module** — build MSAs from UniRef50 with MMseqs2, turn them into per-residue conservation features. | ⏳ later |
+| `build_uniref_db.sh` + `.sbatch` | **Evolutionary module, step 1** — convert the 98 UniRef50 CSV shards → FASTA and `mmseqs createdb` to build the search database (SLURM CPU job). | ✅ built |
+| `evo_features.py` | **Evolutionary module, step 2+** — search each PPB protein vs UniRef50 → MSA → per-residue conservation features. | ⏳ next |
 | `model.py` | The multi-task model: sequence + structure + evolution → cross-attention → interaction / affinity / interface heads. | ⏳ later |
 | `train_phase3.py` + `*.sbatch` | Training loop + SLURM jobs (sanity overfit first, then full run on GPU05). | ⏳ later |
 
@@ -19,7 +20,8 @@ structures, affinities, and interface labels all exist. Full design: `../docs/AR
 - [x] UniRef50 sequence source downloaded (`~/Projects/ppi-data/uniref50_hf`, 98 shards, ~17 GB) — feeds the evolutionary module
 - [x] Structural featurizer + self-test (`struct_features.py`)
 - [x] Structural graph-network layers (`struct_module.py`, `StructEncoder`)
-- [ ] MMseqs2 database build + MSA/conservation features
+- [x] UniRef50 database build job (`build_uniref_db.sh` / `.sbatch`)
+- [ ] MSA search + per-residue conservation features (`evo_features.py`)
 - [ ] Multi-task model + training + evaluation
 
 ## How the structural data flows
