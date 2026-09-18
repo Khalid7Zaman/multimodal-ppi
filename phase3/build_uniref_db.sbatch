@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=uniref_db
-#SBATCH --partition=cpu03_192,cpu04_192,cpu06_192
+#SBATCH --partition=cpu05_384,cpu03_192,cpu04_192,cpu06_192,cpu02_192_short,cpu01_96_short
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=04:00:00
