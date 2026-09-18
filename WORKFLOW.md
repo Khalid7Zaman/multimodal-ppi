@@ -1,12 +1,16 @@
 # Project Workflow Cheat-Sheet — multimodal-ppi
 
-Your project lives in **three places** that must be kept in sync:
+Your project lives in **four places** that are kept in sync:
 
-- **Cluster:** `~/Projects/multimodal-ppi` — where code runs
-- **Gitee:** https://gitee.com/khalid7zaman/multimodal-ppi — online master + backup
-- **Laptop:** `...\3. New project\multimodal-ppi` — local copy
+- **Cluster:** `~/Projects/multimodal-ppi` — where the code runs (GPU jobs via SLURM)
+- **Laptop:** `E:\Study\RAP-SUAT\Project and Meeting with PhD stds\Personal Projects\1. First Project\2. Protein-Protein-Interaction\multimodal-ppi` — local copy
+- **Gitee:**  https://gitee.com/khalid7zaman/multimodal-ppi — online backup #1
+- **GitHub:** https://github.com/Khalid7Zaman/multimodal-ppi — online backup #2
 
 Git is the "courier" that moves files between them. **Nothing moves until you run a command.**
+
+> **One `git push` now updates BOTH Gitee and GitHub at once** (`origin` has two push URLs).
+> You do NOT push to them separately anymore.
 
 ---
 
@@ -19,51 +23,47 @@ Git is the "courier" that moves files between them. **Nothing moves until you ru
 ## Start of a session (get the latest first)
 
 ```
-cd ~/Projects/multimodal-ppi
+cd ~/Projects/multimodal-ppi        # cluster  (on the laptop, use the laptop path above)
 git pull
 ```
 
 ## Save your work (end of a session)
 
 ```
-cd ~/Projects/multimodal-ppi
 git add -A
 git commit -m "describe what you did today"
-git push
+git push                            # goes to BOTH Gitee and GitHub
 ```
 
-Change the words inside the quotes each time, e.g. `git commit -m "trained first small model"`.
+Change the words in quotes each time, e.g. `git commit -m "trained first small model"`.
 
 ## Check where things stand
 
 ```
 git status              # should say: up to date, working tree clean
 git log --oneline -5    # your last 5 saved versions
+git remote -v           # origin should show TWO (push) lines: gitee + github
 ```
 
 ---
 
-## The same commands on the laptop
+## Credentials
 
-Open PowerShell, then:
+- **Gitee:**  username `khalid7zaman`, password = your **Gitee token**.
+- **GitHub:** username `Khalid7Zaman`, password = your **GitHub token** (a Personal Access Token).
+  - Laptop remembers it via **Windows Credential Manager** after the first sign-in.
+  - Cluster remembers it via `git config credential.helper store` after the first push.
+- **Never paste a token into a chat or share it.** If one leaks, regenerate it in the site's
+  settings; the new one is picked up on the next sign-in (laptop) or the next push (cluster).
+
+## One-time setup of the two-remote push (already done — kept here for reference / new machines)
 
 ```
-cd "E:\Study\RAP-SUAT\Project and Meeting with PhD stds\Personal Projects\1. First Project\3. New project\multimodal-ppi"
-git pull        # before you start
-git add -A
-git commit -m "..."
-git push        # after you finish
+git remote set-url --add --push origin https://gitee.com/khalid7zaman/multimodal-ppi.git
+git remote set-url --add --push origin https://github.com/Khalid7Zaman/multimodal-ppi.git
 ```
-
----
-
-## If it asks for username / password
-
-- Username: `khalid7zaman`
-- Password: your **Gitee token** (NOT your login password)
 
 ## Safety notes
 
-- Never share your Gitee or GitHub token with anyone.
 - Big files (data, trained models) are ignored on purpose — see `.gitignore`.
 - If a push is **rejected**, run `git pull` first, then `git push` again.
