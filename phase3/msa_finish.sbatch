@@ -50,11 +50,9 @@ fi
 # ---- Step 3: result2msa, SINGLE-THREADED (one 240 GB block, fits one big node) ----
 echo "[3/4] result2msa (single-threaded) ... this is the slow step; please be patient."
 rm -f "$WORK"/msadb.*
-/usr/bin/time -v mmseqs result2msa "$WORK/qdb" "$SUB" "$WORK/res" "$WORK/msadb" \
-  --db-load-mode 2 --threads "$RTHREADS" 2> "$WORK/result2msa_time.txt" || {
-    echo "result2msa failed; tail of its resource log:"; tail -n 20 "$WORK/result2msa_time.txt"; exit 1; }
-echo "    result2msa done. Peak memory (from time -v):"
-grep "Maximum resident" "$WORK/result2msa_time.txt" || true
+mmseqs result2msa "$WORK/qdb" "$SUB" "$WORK/res" "$WORK/msadb" \
+  --db-load-mode 2 --threads "$RTHREADS"
+echo "    result2msa done."
 
 # ---- Step 4: unpack per-protein a3m ----
 echo "[4/4] unpack per-protein a3m ..."
