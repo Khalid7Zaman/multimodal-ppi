@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=ppb_msa_finish
-#SBATCH --partition=gpu_6000D,cpu05_384
+#SBATCH --partition=gpu_6000D
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=300G
-#SBATCH --time=08:00:00
+#SBATCH --mem=360G
+#SBATCH --time=12:00:00
 #SBATCH --output=phase3/logs/ppb_msa_finish_%j.out
 
 # ---------------------------------------------------------------------------
