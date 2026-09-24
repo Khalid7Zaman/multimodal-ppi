@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=mm_sanity
-#SBATCH --partition=gpu_6000D,gpu_5090
+#SBATCH --partition=gpu_6000D,gpu_5090,gpu_5080,gpu_5070ti,gpu_3080ti
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=96G
+#SBATCH --mem=64G
 #SBATCH --time=01:00:00
 #SBATCH --output=phase3/logs/mm_sanity_%j.out
 
