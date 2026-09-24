@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=ppb_msa_finish
-#SBATCH --partition=gpu_6000D
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=360G
-#SBATCH --time=12:00:00
+#SBATCH --job-name=ppb_msa
+#SBATCH --partition=cpu03_192,cpu06_192,gpu_3080ti,gpu_5070ti
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=110G
+#SBATCH --time=08:00:00
 #SBATCH --output=phase3/logs/ppb_msa_finish_%j.out
 
 # ---------------------------------------------------------------------------
-# Finish the MSA build from the SAVED alignment (res.*). Do NOT re-run the 2h search.
+# Build the MSAs — FAST version that runs on ordinary (non-giant) nodes.
 #
-# ROOT CAUSE (finally pinned down, job 290755):
-#   result2msa allocates a fixed ~240 GB block PER THREAD (sized from UniRef50's key
-#   space, not from how many queries or how big the target DB is). So memory = threads x 240GB.
-#   With many threads it needed terabytes and always died.
-# FIX: run result2msa SINGLE-THREADED -> one 240 GB block -> fits on one big-memory node
-#   (cpu05 = 380 GB, or gpu05 = 515 GB). Slower, but it completes. No batching needed
-#   (the 240 GB is fixed regardless of query count), so one clean pass.
-# Resumable: step A (reduced DB) is skipped if already built; if result2msa finishes but
-#   unpack is interrupted, re-running redoes only the cheap unpack.
+# ROOT CAUSE of every earlier failure: result2msa allocates a fixed ~240 GB block
+# PER THREAD, sized from UniRef50's full 58.9M key space — even against a reduced DB,
+# because the alignment results still reference that huge key range. That forced
+# single-thread + a >380 GB node, and both big nodes are now saturated by other users.
+#
+# FIX: rebuild the hit sequences into a COMPACT database (fresh createdb -> keys 0..844k),
+# re-search the queries against it (tiny + fast), then result2msa against the compact DB.
+# The 240 GB block shrinks to a few GB, so this runs MULTI-THREADED with modest memory
+# on any ordinary free node, in well under an hour.
+#
+# Resumable: the compact DB (step B) is skipped if already built.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 export PATH="$HOME/Projects/tools/mmseqs/bin:$PATH"
@@ -27,36 +29,48 @@ DATA="$HOME/Projects/ppi-data"
 WORK="$DATA/msa/full"
 A3M="$WORK/a3m"
 DB="$DATA/uniref50_db"
-SUB="$WORK/hitdb"           # reduced target DB (already built; smaller to memory-map)
-RTHREADS=1                  # result2msa: ONE thread (each thread wants ~240 GB)
+SUB="$WORK/hitdb"            # reduced DB (only hit sequences; original 58.9M-scale keys)
+CDB="$WORK/hitdb_compact"    # compact-key DB (keys 0..844k) -> shrinks the allocation
+T="${SLURM_CPUS_PER_TASK:-16}"
 
 mkdir -p "$A3M" phase3/logs
-echo "node: $(hostname)   result2msa threads: $RTHREADS"
+echo "node: $(hostname)   threads: $T"
 echo "--- free memory at start (GB) ---"; free -g
 
-# ---- Step A: reduced target DB (only sequences hit) -- skip if already present ----
+# ---- Step A: reduced DB from the saved alignment's hit keys (skip if present) ----
 if [ ! -s "${SUB}.dbtype" ]; then
-  echo "[A] collecting unique target keys ..."
+  echo "[A] collecting hit keys + building reduced DB ..."
   cat "$WORK"/res.[0-9]* | tr '\0' '\n' | awk '$1 ~ /^[0-9]+$/ {print $1}' | sort -un > "$WORK/hit_keys.txt"
-  NK=$(wc -l < "$WORK/hit_keys.txt"); echo "    unique hit sequences: $NK"
-  [ "$NK" -ge 1000 ] || { echo "    ERROR: too few hit keys ($NK)."; exit 1; }
   mmseqs createsubdb "$WORK/hit_keys.txt" "$DB"     "$SUB"     >/dev/null
   mmseqs createsubdb "$WORK/hit_keys.txt" "${DB}_h" "${SUB}_h" >/dev/null
-  echo "[A] reduced DB ready"
 else
-  echo "[A] reduced target DB already present -> skip rebuild"
+  echo "[A] reduced DB present -> skip"
 fi
 
-# ---- Step 3: result2msa, SINGLE-THREADED (one 240 GB block, fits one big node) ----
-echo "[3/4] result2msa (single-threaded) ... this is the slow step; please be patient."
-rm -f "$WORK"/msadb.*
-mmseqs result2msa "$WORK/qdb" "$SUB" "$WORK/res" "$WORK/msadb" \
-  --db-load-mode 2 --threads "$RTHREADS"
-echo "    result2msa done."
+# ---- Step B: COMPACT-key DB (FASTA -> fresh createdb; keys renumbered 0..N-1) ----
+if [ ! -s "${CDB}.dbtype" ]; then
+  echo "[B] building compact-key DB (this is the memory fix) ..."
+  mmseqs convert2fasta "$SUB" "$WORK/hitdb.fasta" >/dev/null
+  mmseqs createdb "$WORK/hitdb.fasta" "$CDB" >/dev/null
+  echo "    compact DB entries: $(wc -l < "${CDB}.index")"
+else
+  echo "[B] compact DB present -> skip"
+fi
 
-# ---- Step 4: unpack per-protein a3m ----
-echo "[4/4] unpack per-protein a3m ..."
-mmseqs unpackdb "$WORK/msadb" "$A3M" --unpack-name-mode 1 --unpack-suffix .a3m >/dev/null
+# ---- Step C: re-search queries vs the small compact DB (fast, low memory, threaded) ----
+echo "[C] search 9,516 queries vs compact DB ..."
+rm -rf "$WORK/tmp2"; mkdir -p "$WORK/tmp2"
+mmseqs search "$WORK/qdb" "$CDB" "$WORK/res2" "$WORK/tmp2" \
+  --threads "$T" -s 5.7 --max-seqs 1000 -e 0.001
+
+# ---- Step D: result2msa (now low memory, multi-threaded) ----
+echo "[D] result2msa ..."
+rm -f "$WORK"/msadb2.*
+mmseqs result2msa "$WORK/qdb" "$CDB" "$WORK/res2" "$WORK/msadb2" --threads "$T"
+
+# ---- Step E: unpack one a3m per protein ----
+echo "[E] unpack per-protein a3m ..."
+mmseqs unpackdb "$WORK/msadb2" "$A3M" --unpack-name-mode 1 --unpack-suffix .a3m
 
 echo "TOTAL a3m files: $(ls "$A3M" | wc -l)  ->  $A3M"
 echo "----- done -----"
