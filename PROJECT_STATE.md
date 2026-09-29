@@ -2,12 +2,12 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, on GitHub, and on the cluster. Last updated: 2026-09-18.
+on Gitee, on GitHub, and on the cluster. Last updated: 2026-09-29.
 
 **Related docs (in this repo):** `docs/PROPOSAL.md` (research proposal v10) ·
 `docs/ARCHITECTURE.md` (5-stage design + Phase 3/4 plan) · `WORKFLOW.md` (git sync cheat-sheet) ·
 `phase1/DATA_README.md` (datasets) · `reports/PHASE0_SUMMARY.md`, `PHASE1_SUMMARY.md`,
-`PHASE2_SUMMARY.md` (phase write-ups).
+`PHASE2_SUMMARY.md`, `PHASE3_SUMMARY.md` (phase write-ups).
 
 ## 1. Project summary
 A multimodal deep-learning model for protein–protein interaction. From the sequences of two
@@ -57,9 +57,10 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   the PLM-interact baseline on a small dataset. Submit through SLURM. **— DONE (2026-09-09).**
 - Phase 1 — Data assembly (public PPI datasets + PDBbind). **— DONE (2026-09-11).**
 - Phase 2 — Core interaction model (sequence + cross-attention). **— DONE (2026-09-17).**
-- Phase 3 — Add structural (PDBbind) and evolutionary modules. **— IN PROGRESS (started 2026-09-18).**
-- Phase 4 — Add binding-affinity and interface heads. (Brought forward into Phase 3 — see §8.)
-- Phase 5 — Benchmarking and ablations.
+- Phase 3 — Add structural (PDBbind) and evolutionary modules; bring the affinity + interface
+  heads forward. **— DONE (2026-09-29).**
+- Phase 4 — Affinity + interface heads. (Completed within Phase 3 — see §8.)
+- Phase 5 — Benchmarking and ablations (definitive 650M runs with error bars, interpretability).
 - Phase 6 — Manuscript and public code release.
 
 ## 7. Current status
@@ -68,8 +69,8 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 - Infrastructure set up and tested (repo synced across cluster, laptop, Gitee, and GitHub).
 - **Phase 0 COMPLETE (2026-09-09):** environment built on the cluster (conda env `mmppi`,
   Python 3.10, `torch 2.7.1+cu128`) and the PLM-interact baseline reproduced end to end. On the
-  D-SCRIPT human test set (52,725 pairs): **AUROC 0.9885, AUPR 0.9174** — well above the D-SCRIPT
-  (~0.55) and Topsy-Turvy (~0.58–0.61) AUPR baselines. Scripts under `phase0_baseline/`.
+  D-SCRIPT human test set (52,725 pairs): **AUROC 0.9885, AUPR 0.9174.** Scripts under
+  `phase0_baseline/`.
 - **Phase 1 COMPLETE (2026-09-11):** training data assembled from public sources.
   Interaction — Bernett gold standard (leakage-free): 163,192 / 59,260 / 52,048 balanced
   train/val/test pairs. Affinity — PPB-Affinity (filtered): 6,485 / 965 / 757 complexes with pKd.
@@ -78,61 +79,53 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   `phase1/` (see phase1/DATA_README.md).
 - **Phase 2 COMPLETE (2026-09-17):** core interaction model built and evaluated. `CrossAttnPPI` =
   ESM-2 encoder (fine-tuned end-to-end) → 256-d projection → two-way cross-attention (A↔B) →
-  symmetric pooling `[vA+vB, vA*vB, |vA-vB|]` → MLP head; BCEWithLogits loss, AdamW, bf16.
-  Trained on the Bernett gold-standard interaction data at two encoder sizes on GPU05 (RTX 6000D).
-  Held-out test set (52,048 pairs): **35M model AUROC 0.7033 / AUPR 0.7017; 650M model
-  AUROC 0.7174 / AUPR 0.7093.** Both exceed the published Bernett baselines (~0.69 AUPR); the 650M
-  is best. Code under `phase2/` (train_ppi.py, eval_ppi.py, SLURM jobs train/eval + *_650M);
-  full write-up in `reports/PHASE2_SUMMARY.md`; checkpoints on the cluster under
-  `phase2/runs/ppi_35M_v1/` and `phase2/runs/ppi_650M_v1/` (best.pt/last.pt, kept off git).
-- **Phase 3 IN PROGRESS (started 2026-09-18):** adding the structural (contact-graph) and
-  evolutionary (MSA conservation) modules on the PPB-Affinity complexes, and bringing the Phase 4
-  affinity + interface heads forward (decided at kickoff — see §8). The interaction head stays the
-  Phase 2 sequence model. Done so far:
-  - Structural featurizer `phase3/struct_features.py` — builds per-protein C-alpha residue contact
-    graphs from the cached RCSB structures, aligned 1:1 to the sequence. Self-tested on real PPB
-    data: ~9 contacts/residue, ~60% of complexes align 1:1 (the rest fall back to sequence-only).
-  - UniRef50 sequence source downloaded for the MSA module
-    (`~/Projects/ppi-data/uniref50_hf`, 98 CSV shards, ~17 GB) via the HF mirror.
-  - MMseqs2 installed on the cluster (`~/Projects/tools/mmseqs/bin`).
-  - Next: structural graph-network layers (`phase3/struct_module.py`) → MMseqs2 DB + conservation
-    features → multi-task model + training (sanity overfit first, then GPU05).
+  symmetric pooling → MLP head. Held-out test set (52,048 pairs): **35M AUROC 0.7033 / AUPR 0.7017;
+  650M AUROC 0.7174 / AUPR 0.7093** — both above the ~0.69 published Bernett AUPR, 650M best. Code
+  under `phase2/`; full write-up in `reports/PHASE2_SUMMARY.md`.
+- **Phase 3 COMPLETE (2026-09-29):** structural and evolutionary modules built, MSAs generated for
+  all 9,516 proteins, and the multimodal multi-task model trained and evaluated. Full write-up in
+  `reports/PHASE3_SUMMARY.md`. Highlights:
+  - **Structural module** — `phase3/struct_features.py` (C-alpha contact graphs at 8 Å) +
+    `phase3/struct_module.py` (plain-PyTorch GCN, no torch-geometric).
+  - **Evolutionary module** — MMseqs2 search of all 9,516 PPB proteins vs UniRef50 (58.9M seqs);
+    **844,884** unique homologs; MSAs for all 9,516 proteins, **median depth 945** (mean 638),
+    100% real alignments. Conservation features (22-dim) in `phase3/evo_features.py`. Verification in
+    `reports/PHASE3_MSA_VERIFY.txt`.
+  - **Multimodal model** — `phase3/model.py` (MultiModalPPI: sequence + structure + evolution →
+    cross-attention → affinity + interface heads) and `phase3/data.py` (multi-task dataset).
+  - **First ablation (35M, 5 epochs; validation set).** Adding the evolutionary module improved every
+    task: affinity RMSE 2.032 → **1.820**, affinity Pearson 0.293 → **0.343**, interface AUPR
+    0.256 → **0.271**. The direction supports the central multimodal hypothesis; magnitude and
+    significance await the definitive runs.
+  - **Next:** definitive 650M training with repeated seeds (error bars), the full sequence →
+    +structure → +evolution ablation figure, and Phase 5 benchmarking + interpretability.
 
 ## 8. Decisions log
 - 2026-09-09 — Scope set to protein–protein interaction and binding affinity. PDBbind chosen for
   structure and affinity. Molecular simulation as a data engine, AlphaFold prediction, peptides,
   and ADMET removed from the immediate scope. (Prof. Sun)
-- 2026-09-09 — ADMET properties, peptide developability (for example hydrolytic stability), and
-  protein–ligand binding recorded as later extensions, not part of the current phase. (Prof. Sun)
+- 2026-09-09 — ADMET properties, peptide developability, and protein–ligand binding recorded as
+  later extensions, not part of the current phase. (Prof. Sun)
 - 2026-09-09 — Compute confirmed: SLURM scheduler; GPU05 (RTX 6000D) reserved for model training;
   general tasks on CPU03/05/06 and GPU03/04/06–10. Environment: `torch 2.7.1+cu128`; prefer ESM-3.
   No in-house data or wet-lab validation yet. (Prof. Sun)
-- 2026-09-09 — Phase 0 complete. Cluster environment built (conda env `mmppi`, Python 3.10,
-  `torch 2.7.1+cu128`; Blackwell RTX 50-series require CUDA 12.8). PLM-interact-650M reproduced on
-  the D-SCRIPT human test set: AUROC 0.9885 / AUPR 0.9174. Baseline scripts committed under
-  `phase0_baseline/`; repo mirrored on Gitee and GitHub. (K. Zaman)
-- 2026-09-11 — Phase 1 complete. Interaction data = Bernett gold standard (leakage-free, via
-  Synthyra/bernett_gold_ppi on Hugging Face). Affinity data = PPB-Affinity filtered set (via
-  proteinea/ppb_affinity on Hugging Face), which aggregates PDBbind's protein-protein complexes
-  plus SKEMPI and others — chosen as the public route to PPI affinities because PDBbind's PP
-  subset is now partly behind PDBbind+. Interface residues derived from RCSB structures (5 Å
-  inter-chain contacts); ~5,400 complexes labeled. Raw data kept off git under ~/Projects/ppi-data/;
-  scripts + DATA_README committed under phase1/. (K. Zaman)
-- 2026-09-17 — Phase 2 complete. Built CrossAttnPPI (ESM-2 fine-tuned end-to-end + two-way
-  cross-attention + symmetric head; BCE, AdamW, bf16). Trained 35M and 650M encoders on the Bernett
-  gold standard (GPU05, RTX 6000D). Held-out test (52,048 pairs): 35M AUROC 0.7033 / AUPR 0.7017;
-  650M AUROC 0.7174 / AUPR 0.7093 — both above the ~0.69 published Bernett AUPR, 650M best. The
-  decision to fine-tune ESM-2 end-to-end (rather than freeze it) is supported by these results.
-  Code + summary committed and mirrored (Gitee, GitHub, laptop); checkpoints kept off git on the
-  cluster. (K. Zaman)
-- 2026-09-18 — Phase 3 kickoff decisions. (1) Build the structural + evolutionary modules on the
-  PPB-Affinity complexes (where structures, affinities, and interface labels all co-exist) and bring
-  the Phase 4 affinity + interface heads FORWARD into this phase; the interaction head stays the
-  Phase 2 sequence model. Rationale: the 163k Bernett interaction pairs are sequence-only (no
-  structures; MSAs infeasible at that scale), while the ~6.5k PPB complexes have everything.
-  (2) Structural module built WITHOUT torch-geometric — a dense C-alpha residue contact map + plain
-  PyTorch graph layers — to avoid fragile compiled-extension installs on the CUDA 12.8 / Blackwell
-  stack. (3) Evolutionary module will use MMseqs2 (installed) + a local UniRef50 (downloaded via the
-  HF mirror, as the standard EU mirror is throttled from China) to build MSAs and per-residue
-  conservation. (4) Sync fixed: `origin` now pushes to Gitee AND GitHub (GitHub had been missed);
-  the GitHub token was regenerated after being exposed. (K. Zaman)
+- 2026-09-09 — Phase 0 complete. PLM-interact-650M reproduced on the D-SCRIPT human test set:
+  AUROC 0.9885 / AUPR 0.9174. (K. Zaman)
+- 2026-09-11 — Phase 1 complete. Interaction = Bernett gold standard (via Synthyra/bernett_gold_ppi).
+  Affinity = PPB-Affinity filtered set (via proteinea/ppb_affinity), which aggregates PDBbind's
+  protein-protein complexes plus SKEMPI and others. Interface residues from RCSB structures (5 Å
+  inter-chain contacts). (K. Zaman)
+- 2026-09-17 — Phase 2 complete. Built CrossAttnPPI; trained 35M and 650M encoders on the Bernett
+  gold standard (GPU05). Test AUPR 0.7017 / 0.7093 — above the ~0.69 published baseline; 650M best.
+  (K. Zaman)
+- 2026-09-18 — Phase 3 kickoff. Build the structural + evolutionary modules on the PPB-Affinity
+  complexes and bring the affinity + interface heads forward. Structural module built WITHOUT
+  torch-geometric (dense C-alpha contact map + plain-PyTorch GCN) to avoid fragile compiled-extension
+  installs on CUDA 12.8 / Blackwell. Evolutionary module via MMseqs2 + local UniRef50. (K. Zaman)
+- 2026-09-29 — Phase 3 complete. UniRef50 database built; MSAs generated for all 9,516 PPB proteins
+  (844,884 unique homologs; median depth 945). Reproducible MSA pipeline: search full UniRef50 once,
+  reduce to hit sequences, rebuild with compact indexing, assemble MSAs (the assembly step needs
+  ~240 GB, run single-threaded on gpu05). Multimodal multi-task model built and trained. First
+  controlled ablation (35M, 5 epochs): adding the evolutionary module improved every task
+  (affinity RMSE 2.032 → 1.820, Pearson 0.293 → 0.343, interface AUPR 0.256 → 0.271). Definitive
+  650M runs with error bars are the next step. (K. Zaman)
