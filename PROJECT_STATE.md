@@ -93,12 +93,13 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
     `reports/PHASE3_MSA_VERIFY.txt`.
   - **Multimodal model** — `phase3/model.py` (MultiModalPPI: sequence + structure + evolution →
     cross-attention → affinity + interface heads) and `phase3/data.py` (multi-task dataset).
-  - **First ablation (35M, 5 epochs; validation set).** Adding the evolutionary module improved every
-    task: affinity RMSE 2.032 → **1.820**, affinity Pearson 0.293 → **0.343**, interface AUPR
-    0.256 → **0.271**. The direction supports the central multimodal hypothesis; magnitude and
-    significance await the definitive runs.
-  - **Next:** definitive 650M training with repeated seeds (error bars), the full sequence →
-    +structure → +evolution ablation figure, and Phase 5 benchmarking + interpretability.
+  - **Ablation + definitive run (validation set).** 35M ablation: adding the evolutionary module
+    improved every task (affinity RMSE 2.032 → 1.820, Pearson 0.293 → 0.343, interface AUPR
+    0.256 → 0.271). The definitive **650M** run (best at epoch 2) improved them substantially
+    further: **affinity RMSE 1.555, Pearson 0.473 (+38% over 35M), interface AUPR 0.293.** Full
+    progression and figure in `reports/PHASE3_SUMMARY.md` / `reports/figures/phase3_results.png`.
+  - **Next:** repeated seeds (error bars), held-out test-set numbers, and Phase 5 benchmarking +
+    interpretability.
 
 ## 8. Decisions log
 - 2026-09-09 — Scope set to protein–protein interaction and binding affinity. PDBbind chosen for
@@ -127,5 +128,9 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   reduce to hit sequences, rebuild with compact indexing, assemble MSAs (the assembly step needs
   ~240 GB, run single-threaded on gpu05). Multimodal multi-task model built and trained. First
   controlled ablation (35M, 5 epochs): adding the evolutionary module improved every task
-  (affinity RMSE 2.032 → 1.820, Pearson 0.293 → 0.343, interface AUPR 0.256 → 0.271). Definitive
-  650M runs with error bars are the next step. (K. Zaman)
+  (affinity RMSE 2.032 → 1.820, Pearson 0.293 → 0.343, interface AUPR 0.256 → 0.271). (K. Zaman)
+- 2026-09-30 — Definitive 650M run complete (all three views, 8 epochs; best at epoch 2, fast
+  convergence as in Phase 2). Validation: affinity RMSE 1.555, Pearson 0.473, interface AUPR 0.293
+  — substantially above the 35M model. Results figure at `reports/figures/phase3_results.png`.
+  Remaining for Phase 5: repeated seeds for error bars, held-out test-set evaluation, full
+  sequence→+structure→+evolution ablation, and benchmarking + interpretability. (K. Zaman)
