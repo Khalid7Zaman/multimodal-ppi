@@ -15,12 +15,20 @@ Example (SLURM job calls this):
   python phase3/train_phase3.py --esm <path> --epochs 5 --batch 2 --out phase3/runs/mm_v1
   python phase3/train_phase3.py --esm <path> --overfit --limit 16 --epochs 60   # sanity check
 """
-import os, argparse, time, math
+import os, argparse, time, math, random, json
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 import numpy as np
 import torch
 import torch.nn as nn
+
+
+def set_seed(seed):
+    """Make a run reproducible across python / numpy / torch (CPU + GPU)."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 from torch.utils.data import DataLoader, Subset
 from transformers import AutoTokenizer
 from sklearn.metrics import average_precision_score
@@ -79,12 +87,14 @@ def main():
     ap.add_argument("--iface_w", type=float, default=1.0)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--overfit", action="store_true", help="train and eval on the same tiny set")
+    ap.add_argument("--seed", type=int, default=0, help="random seed (for repeated runs / error bars)")
     ap.add_argument("--log_every", type=int, default=50)
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
+    set_seed(args.seed)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("device:", device, flush=True)
+    print(f"device: {device}   seed: {args.seed}", flush=True)
 
     tok = AutoTokenizer.from_pretrained(args.esm)
     model = MultiModalPPI(make_esm_encoder(args.esm), d_model=256).to(device)
@@ -129,6 +139,17 @@ def main():
         print(msg, flush=True)
     torch.save(model.state_dict(), os.path.join(args.out, "last.pt"))
     print("done ->", args.out, flush=True)
+
+    # Final: score the BEST checkpoint on the held-out TEST split (the manuscript number).
+    if not args.overfit:
+        model.load_state_dict(torch.load(os.path.join(args.out, "best.pt"), map_location=device))
+        test_dl = DataLoader(PPBComplexData("test", tok, max_length=args.max_length),
+                             batch_size=args.batch, shuffle=False, collate_fn=collate, num_workers=2)
+        trmse, tpear, taupr = evaluate(model, test_dl, device)
+        print(f"TEST (best checkpoint) | affinity RMSE {trmse:.3f} Pearson {tpear:.3f} | "
+              f"interface AUPR {taupr:.3f}", flush=True)
+        with open(os.path.join(args.out, "test_metrics.json"), "w") as f:
+            json.dump({"seed": args.seed, "rmse": trmse, "pearson": tpear, "aupr": taupr}, f, indent=2)
 
 
 if __name__ == "__main__":
