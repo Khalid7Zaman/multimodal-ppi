@@ -2,7 +2,7 @@
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP)   **Supervisor:** Prof. Zhaoxi Sun, SUAT
 **Project:** multimodal-ppi (Protein–Protein Interaction)   ·   2026-09-29
-**Status:** COMPLETE — structural and evolutionary modules built; multiple sequence alignments generated for all 9,516 proteins; the multimodal multi-task model trained and evaluated. A first controlled ablation shows the evolutionary module improves every task.
+**Status:** COMPLETE — structural and evolutionary modules built; multiple sequence alignments generated for all 9,516 proteins; the multimodal multi-task model trained and evaluated at two encoder sizes. Adding evolution and scaling to the 650M encoder improves every task.
 
 ---
 
@@ -92,6 +92,29 @@ Both runs on the RTX 6000D (gpu05).
    statistical strength come from the larger, repeated runs planned next. We do not overstate a
    modest first result.
 
+## Definitive run — 650M encoder
+
+We then trained the full model with the larger **650M** ESM-2 encoder (all three views active,
+8 epochs, on the RTX 6000D). Validation peaked at **epoch 2** and then plateaued — the same fast
+convergence observed in Phase 2 — so the best checkpoint (epoch 2, saved automatically) is the
+reported model, and about 2–3 epochs is sufficient for this data.
+
+### Results — full progression (held-out validation set, 965 complexes)
+
+| Model | Affinity RMSE ↓ | Affinity Pearson ↑ | Interface AUPR ↑ |
+|---|---|---|---|
+| Sequence + Structure (35M) | 2.032 | 0.293 | 0.256 |
+| + Evolution (35M) | 1.820 | 0.343 | 0.271 |
+| **+ Evolution + 650M (definitive)** | **1.555** | **0.473** | **0.293** |
+
+Figure: `reports/figures/phase3_results.png`.
+
+**Findings:** adding evolution improves every task, and scaling to the 650M encoder improves them
+substantially further — affinity correlation rises from 0.343 to **0.473** (+38% relative) and the
+affinity error falls from 1.82 to **1.56**. Interface AUPR improves more modestly (0.256 → 0.293)
+and plateaus near 0.29. Binding-affinity prediction is now a solid result; interface detection is
+the weaker task and a clear target for later work.
+
 ## Files (in `phase3/`)
 
 - `struct_features.py`, `struct_module.py` — structural featurizer and graph network.
@@ -109,9 +132,12 @@ documentation are in git, mirrored to Gitee and GitHub.
 
 ## Next steps
 
-1. **Definitive training run** — the larger **650M** encoder, more epochs, and repeated random
-   seeds so the results carry error bars.
-2. **Full ablation figure** — sequence-only → + structure → + evolution, on one fixed split.
-3. **Benchmarking (Phase 5)** — against PLM-interact on interaction, and against structure-based
-   scoring on affinity; plus the interpretability figures (cross-attention interaction maps and
+1. **Repeated runs for error bars** — 2–3 random seeds of the 650M model, so the reported numbers
+   carry a mean ± standard deviation rather than a single point.
+2. **Final test-set evaluation** — the held-out **test** split (757 complexes), which gives the
+   number for the manuscript (the values above are on the validation split).
+3. **Full ablation figure** — extend to sequence-only → + structure → + evolution on one fixed
+   split (the +structure and +evolution steps are done; sequence-only remains).
+4. **Benchmarking (Phase 5)** — against PLM-interact on interaction and against structure-based
+   scoring on affinity; plus interpretability figures (cross-attention interaction maps and
    predicted interface residues shown on the 3D structures).
