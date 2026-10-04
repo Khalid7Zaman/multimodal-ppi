@@ -27,5 +27,8 @@ slurm-*.out
 
 # OS
 .DS_Store
+desktop.ini
 phase2/*.out
-Claude outputs/
+
+# Local scratch (kept out of the repo)
+scratch/
