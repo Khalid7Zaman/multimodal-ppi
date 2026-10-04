@@ -1,8 +1,8 @@
 # Phase 3 — Structural and Evolutionary Modules (Multimodal, Multi-Task Model)
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP)   **Supervisor:** Prof. Zhaoxi Sun, SUAT
-**Project:** multimodal-ppi (Protein–Protein Interaction)   ·   2026-09-29
-**Status:** COMPLETE — structural and evolutionary modules built; multiple sequence alignments generated for all 9,516 proteins; the multimodal multi-task model trained and evaluated at two encoder sizes. Adding evolution and scaling to the 650M encoder improves every task.
+**Project:** multimodal-ppi (Protein–Protein Interaction)   ·   2026-10-04
+**Status:** COMPLETE — structural and evolutionary modules built; multiple sequence alignments generated for all 9,516 proteins; the multimodal multi-task model trained and evaluated at two encoder sizes, then confirmed on the held-out test set over three seeds with error bars. Adding evolution and scaling to the 650M encoder improves every task.
 
 ---
 
@@ -115,6 +115,33 @@ affinity error falls from 1.82 to **1.56**. Interface AUPR improves more modestl
 and plateaus near 0.29. Binding-affinity prediction is now a solid result; interface detection is
 the weaker task and a clear target for later work.
 
+## Final result — held-out test set with error bars (definitive 650M, three seeds)
+
+The numbers above are on the validation split and come from single runs. For the reported,
+manuscript-grade result we evaluated the definitive 650M model on the **held-out test split
+(757 complexes, never seen in training)** and repeated the whole training **three times** with
+independent random seeds (0, 1, 2). We report the **mean ± standard deviation** across the three
+seeds; the standard deviation is the error bar.
+
+| Metric | Held-out test (mean ± s.d., 3 seeds) | Individual seeds |
+|---|---|---|
+| Affinity Pearson *r* ↑ | **0.439 ± 0.018** | 0.419, 0.449, 0.451 |
+| Affinity RMSE ↓ | **1.575 ± 0.044** | 1.609, 1.525, 1.590 |
+| Interface AUPR ↑ | **0.281 ± 0.006** | 0.276, 0.280, 0.287 |
+
+Figure: `reports/figures/phase3_test_results.png`.
+
+**Findings:**
+
+1. **The result is stable and reproducible.** Across three independent seeds the metrics vary only
+   slightly (Pearson ± 0.018, RMSE ± 0.044, interface AUPR ± 0.006), so the performance reflects the
+   model and the data, not a single lucky initialisation.
+2. **Test performance tracks validation closely.** On the held-out test set the affinity correlation
+   is 0.439 and the interface AUPR 0.281, in line with the validation values (0.473 and 0.293); the
+   small drop from validation to test is the expected, honest generalisation gap.
+3. **These are the numbers to report.** They supersede the single-run validation values for any
+   external comparison, because they are measured on data the model never saw and carry error bars.
+
 ## Files (in `phase3/`)
 
 - `struct_features.py`, `struct_module.py` — structural featurizer and graph network.
@@ -124,6 +151,7 @@ the weaker task and a clear target for later work.
 - `evo_features.py` — conservation features and encoder.
 - `model.py`, `data.py` — multimodal model and multi-task dataset.
 - `train_phase3.py`, `sanity_phase3.sbatch`, `train_phase3.sbatch` — training and sanity check.
+- `train_phase3_650M_seeds.sbatch`, `agg_seeds.py` — three-seed array run and aggregation to mean ± s.d.
 - `progress.sh` — progress monitor.
 - `reports/PHASE3_MSA_VERIFY.txt` — MSA depth distribution and data-loader verification.
 
@@ -132,10 +160,10 @@ documentation are in git, mirrored to Gitee and GitHub.
 
 ## Next steps
 
-1. **Repeated runs for error bars** — 2–3 random seeds of the 650M model, so the reported numbers
-   carry a mean ± standard deviation rather than a single point.
-2. **Final test-set evaluation** — the held-out **test** split (757 complexes), which gives the
-   number for the manuscript (the values above are on the validation split).
+1. ~~**Repeated runs for error bars**~~ — **DONE.** Three seeds (0, 1, 2) of the 650M model; the
+   reported numbers now carry a mean ± standard deviation (see "Final result" above).
+2. ~~**Final test-set evaluation**~~ — **DONE.** Evaluated on the held-out test split (757 complexes);
+   these are the manuscript numbers.
 3. **Full ablation figure** — extend to sequence-only → + structure → + evolution on one fixed
    split (the +structure and +evolution steps are done; sequence-only remains).
 4. **Benchmarking (Phase 5)** — against PLM-interact on interaction and against structure-based

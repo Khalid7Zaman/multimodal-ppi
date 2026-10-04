@@ -2,7 +2,7 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, on GitHub, and on the cluster. Last updated: 2026-09-29.
+on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-04.
 
 **Related docs (in this repo):** `docs/PROPOSAL.md` (research proposal v10) ·
 `docs/ARCHITECTURE.md` (5-stage design + Phase 3/4 plan) · `WORKFLOW.md` (git sync cheat-sheet) ·
@@ -98,7 +98,11 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
     0.256 → 0.271). The definitive **650M** run (best at epoch 2) improved them substantially
     further: **affinity RMSE 1.555, Pearson 0.473 (+38% over 35M), interface AUPR 0.293.** Full
     progression and figure in `reports/PHASE3_SUMMARY.md` / `reports/figures/phase3_results.png`.
-  - **Next:** repeated seeds (error bars), held-out test-set numbers, and Phase 5 benchmarking +
+  - **Held-out test set (3 seeds, definitive 650M).** Repeated with seeds 0/1/2 and evaluated on the
+    757-complex test split: **affinity Pearson 0.439 ± 0.018, RMSE 1.575 ± 0.044, interface AUPR
+    0.281 ± 0.006** (mean ± s.d.). Stable across seeds; these are the manuscript numbers. Error-bar
+    figure at `reports/figures/phase3_test_results.png`.
+  - **Next:** full sequence-only → +structure → +evolution ablation, and Phase 5 benchmarking +
     interpretability.
 
 ## 8. Decisions log
@@ -134,3 +138,9 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   — substantially above the 35M model. Results figure at `reports/figures/phase3_results.png`.
   Remaining for Phase 5: repeated seeds for error bars, held-out test-set evaluation, full
   sequence→+structure→+evolution ablation, and benchmarking + interpretability. (K. Zaman)
+- 2026-10-04 — Error bars + held-out test-set evaluation complete. The definitive 650M model was
+  retrained with three seeds (0, 1, 2) and scored on the 757-complex test split: affinity
+  Pearson 0.439 ± 0.018, RMSE 1.575 ± 0.044, interface AUPR 0.281 ± 0.006 (mean ± s.d.). Results
+  are stable across seeds and track the validation figures closely; adopted as the manuscript
+  numbers. Error-bar figure at `reports/figures/phase3_test_results.png`. Remaining for Phase 5:
+  full sequence-only → +structure → +evolution ablation, benchmarking, and interpretability. (K. Zaman)
