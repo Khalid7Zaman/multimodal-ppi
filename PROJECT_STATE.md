@@ -2,7 +2,7 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-04.
+on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-08.
 
 **Related docs (in this repo):** `docs/PROPOSAL.md` (research proposal v10) ·
 `docs/ARCHITECTURE.md` (5-stage design + Phase 3/4 plan) · `WORKFLOW.md` (git sync cheat-sheet) ·
@@ -60,7 +60,8 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 - Phase 3 — Add structural (PDBbind) and evolutionary modules; bring the affinity + interface
   heads forward. **— DONE (2026-09-29).**
 - Phase 4 — Affinity + interface heads. (Completed within Phase 3 — see §8.)
-- Phase 5 — Benchmarking and ablations (definitive 650M runs with error bars, interpretability).
+- Phase 5 — Benchmarking, ablations, interpretability. **— IN PROGRESS.** Interaction benchmark
+  vs PLM-interact complete (see §8); ablation + interpretability remaining.
 - Phase 6 — Manuscript and public code release.
 
 ## 7. Current status
@@ -144,3 +145,10 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   are stable across seeds and track the validation figures closely; adopted as the manuscript
   numbers. Error-bar figure at `reports/figures/phase3_test_results.png`. Remaining for Phase 5:
   full sequence-only → +structure → +evolution ablation, benchmarking, and interpretability. (K. Zaman)
+- 2026-10-08 — Phase 5 interaction benchmark complete. CrossAttnPPI-650M and the published
+  PLM-interact-650M (as released) were scored on the identical leakage-free Bernett test set
+  (52,048 pairs, same metrics). Our model: AUROC 0.717 / AUPR 0.709; PLM-interact: AUROC 0.622 /
+  AUPR 0.636; above the ~0.69 published AUPR baselines. Our model trained on the Bernett train
+  split; PLM-interact used as released (not re-tuned) — part of the gap is task-matched training,
+  noted honestly. Job `phase5/bench_interaction.sbatch`; figure `reports/figures/phase5_interaction_benchmark.png`;
+  write-up `reports/PHASE5_SUMMARY.md`. Remaining in Phase 5: ablation and interpretability. (K. Zaman)
