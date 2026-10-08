@@ -50,13 +50,15 @@ def _contact_map_for(model, seq, chain_ids, threshold=8.0):
 
 
 class PPBComplexData(Dataset):
-    def __init__(self, split, tokenizer, max_length=512, contact_threshold=8.0, use_msa=True):
+    def __init__(self, split, tokenizer, max_length=512, contact_threshold=8.0,
+                 use_msa=True, use_struct=True):
         self.df = pd.read_csv(os.path.join(PPB, f"ppb_{split}_iface.csv")).reset_index(drop=True)
         self.tok = tokenizer
         self.max_length = max_length
         self.max_res = max_length - 2          # room for start/end tokens
         self.thr = contact_threshold
         self.use_msa = use_msa
+        self.use_struct = use_struct           # off -> contact map left all-zero (structure view disabled)
 
     def __len__(self):
         return len(self.df)
@@ -98,7 +100,8 @@ class PPBComplexData(Dataset):
 
     def __getitem__(self, i):
         row = self.df.iloc[i]
-        model = load_model(str(row["pdb"]))     # one structure load for both chains
+        # structure view: load the complex only when enabled; otherwise model=None -> adj stays zero
+        model = load_model(str(row["pdb"])) if self.use_struct else None
         rec = self._one_protein(row["query"], _contact_map_for(model, row["query"], row["receptor_chains"], self.thr), row.get("iface_query", ""))
         lig = self._one_protein(row["text"],  _contact_map_for(model, row["text"],  row["ligand_chains"],   self.thr), row.get("iface_text", ""))
         pkd = float(row["pKd"]) if not pd.isna(row.get("pKd", np.nan)) else float("nan")
