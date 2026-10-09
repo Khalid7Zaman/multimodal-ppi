@@ -2,7 +2,7 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-08.
+on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-09.
 
 **Related docs (in this repo):** `docs/PROPOSAL.md` (research proposal v10) ·
 `docs/ARCHITECTURE.md` (5-stage design + Phase 3/4 plan) · `WORKFLOW.md` (git sync cheat-sheet) ·
@@ -152,3 +152,14 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   split; PLM-interact used as released (not re-tuned) — part of the gap is task-matched training,
   noted honestly. Job `phase5/bench_interaction.sbatch`; figure `reports/figures/phase5_interaction_benchmark.png`;
   write-up `reports/PHASE5_SUMMARY.md`. Remaining in Phase 5: ablation and interpretability. (K. Zaman)
+- 2026-10-09 — Phase 5 module ablation complete (650M, 3 seeds, held-out test split). sequence
+  0.429/1.593/0.286; +structure 0.441/1.592/0.289; +evolution(full) 0.439/1.575/0.281
+  (Pearson/RMSE/AUPR). The three conditions are statistically tied — all pairwise differences fall
+  within the error bars — so NO significant benefit from structure or evolution is claimed at 650M
+  on this test set. This honestly refines the earlier single-run 35M validation signal, which did
+  not survive the rigorous (3-seed, test, error-bar) check. Figure
+  `reports/figures/phase5_ablation.png`; jobs `phase5/ablation_650M.sbatch` + `agg_ablation.py`;
+  view switches added to `phase3/train_phase3.py` / `data.py`. Follow-ups in progress: stratified
+  analysis (structure where structure exists; evolution on deep MSAs) and a stronger-fusion study.
+  Robust wins unaffected: interaction benchmark beats PLM-interact; reproducible multimodal
+  pipeline. (K. Zaman)
