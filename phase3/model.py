@@ -59,9 +59,32 @@ def make_esm_encoder(esm_path):
     return EsmSeqEncoder(esm_path)
 
 
-class MultiModalPPI(nn.Module):
-    def __init__(self, seq_encoder, d_model=256, n_heads=8, dropout=0.1, struct_layers=2):
+class GatedFusion(nn.Module):
+    """Per-residue gated fusion of sequence, structure and evolution.
+      h_struct = h0 + g_s * (hs - h0);   out = h_struct + g_e * he
+    The gates g_s, g_e are per-residue sigmoids learned from the features. With both gates
+    equal to 1 this reproduces the additive fusion (structure + evolution) exactly, so the
+    gated fusion strictly GENERALISES the default path — it can down-weight a view (e.g. a
+    shallow, uninformative MSA) instead of always adding it."""
+    def __init__(self, d_model, dropout=0.1):
         super().__init__()
+        self.g_struct = nn.Sequential(nn.Linear(2 * d_model, d_model), nn.ReLU(),
+                                      nn.Dropout(dropout), nn.Linear(d_model, 1))
+        self.g_evo = nn.Sequential(nn.Linear(2 * d_model, d_model), nn.ReLU(),
+                                   nn.Dropout(dropout), nn.Linear(d_model, 1))
+
+    def forward(self, h0, hs, he):
+        gs = torch.sigmoid(self.g_struct(torch.cat([h0, hs], dim=-1)))      # [B, L, 1]
+        h_struct = h0 + gs * (hs - h0)
+        ge = torch.sigmoid(self.g_evo(torch.cat([h_struct, he], dim=-1)))   # [B, L, 1]
+        return h_struct + ge * he
+
+
+class MultiModalPPI(nn.Module):
+    def __init__(self, seq_encoder, d_model=256, n_heads=8, dropout=0.1, struct_layers=2,
+                 fusion="additive"):
+        super().__init__()
+        self.fusion = fusion
         self.seq   = seq_encoder
         self.proj  = nn.Linear(seq_encoder.d, d_model)
         self.struct = StructEncoder(d_model, n_layers=struct_layers, dropout=dropout)
@@ -75,16 +98,19 @@ class MultiModalPPI(nn.Module):
                                         nn.Dropout(dropout), nn.Linear(d_model, 1))
         self.aff_head   = nn.Sequential(nn.Linear(d_model * 3, d_model), nn.ReLU(),
                                         nn.Dropout(dropout), nn.Linear(d_model, 1))
+        self.fuse = GatedFusion(d_model, dropout) if fusion == "gated" else None
 
     def _mean(self, x, mask):
         m = mask.unsqueeze(-1).to(x.dtype)
         return (x * m).sum(1) / m.sum(1).clamp(min=1.0)
 
     def encode(self, ids, mask, adj, evo):
-        h = self.proj(self.seq(ids, mask))     # sequence -> d_model
-        h = self.struct(h, adj)                # + structure (residual inside)
-        h = h + self.evo(evo)                  # + evolution
-        return h
+        h0 = self.proj(self.seq(ids, mask))    # sequence -> d_model
+        hs = self.struct(h0, adj)              # structure-refined (residual + norm inside)
+        he = self.evo(evo)                     # evolution features
+        if self.fusion == "gated":
+            return self.fuse(h0, hs, he)
+        return hs + he                         # additive (default; identical to original struct + evo)
 
     def forward(self, a_ids, a_mask, a_adj, a_evo, b_ids, b_mask, b_adj, b_evo):
         hA = self.encode(a_ids, a_mask, a_adj, a_evo)
