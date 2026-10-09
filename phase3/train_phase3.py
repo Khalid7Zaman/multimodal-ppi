@@ -90,6 +90,8 @@ def main():
     ap.add_argument("--seed", type=int, default=0, help="random seed (for repeated runs / error bars)")
     ap.add_argument("--no_struct", action="store_true", help="ablation: disable the structure view")
     ap.add_argument("--no_evo", action="store_true", help="ablation: disable the evolution view")
+    ap.add_argument("--fusion", default="additive", choices=["additive", "gated"],
+                    help="how the three views are combined (default additive; 'gated' = learned per-residue gates)")
     ap.add_argument("--log_every", type=int, default=50)
     args = ap.parse_args()
 
@@ -101,10 +103,10 @@ def main():
                      + (["structure"] if use_struct else [])
                      + (["evolution"] if use_msa else []))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"device: {device}   seed: {args.seed}   views: {views}", flush=True)
+    print(f"device: {device}   seed: {args.seed}   views: {views}   fusion: {args.fusion}", flush=True)
 
     tok = AutoTokenizer.from_pretrained(args.esm)
-    model = MultiModalPPI(make_esm_encoder(args.esm), d_model=256).to(device)
+    model = MultiModalPPI(make_esm_encoder(args.esm), d_model=256, fusion=args.fusion).to(device)
 
     train_ds = PPBComplexData("train", tok, max_length=args.max_length,
                               use_msa=use_msa, use_struct=use_struct)
@@ -160,6 +162,7 @@ def main():
               f"interface AUPR {taupr:.3f}", flush=True)
         with open(os.path.join(args.out, "test_metrics.json"), "w") as f:
             json.dump({"seed": args.seed, "views": views, "use_struct": use_struct, "use_msa": use_msa,
+                       "fusion": args.fusion,
                        "rmse": trmse, "pearson": tpear, "aupr": taupr}, f, indent=2)
 
 
