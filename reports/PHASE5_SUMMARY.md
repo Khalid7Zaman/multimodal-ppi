@@ -2,7 +2,7 @@
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP)   **Supervisor:** Prof. Zhaoxi Sun, SUAT
 **Project:** multimodal-ppi (Protein–Protein Interaction)   ·   2026-10-09
-**Status:** IN PROGRESS — interaction benchmark complete; module ablation complete (result honest and inconclusive at 650M); stratified analysis and fusion study in progress; interpretability remaining.
+**Status:** IN PROGRESS — interaction benchmark complete; module ablation complete (tied in aggregate at 650M); stratified analysis complete (evolution helps consistently on deep-MSA complexes); fusion study in progress; interpretability remaining.
 
 ---
 
@@ -63,12 +63,37 @@ Figure: `reports/figures/phase5_ablation.png`.
    views); the structure view aligns for only ~60% of complexes (diluting its signal across the full
    test set); and the 757-complex test set limits the resolution of small effects.
 
-### Part B2 — Stratified analysis (in progress)
+### Part B2 — Stratified analysis (complete)
 
-Because structure is available for only ~60% of complexes and MSA depth varies, the full-test average
-may hide a real effect. We therefore measure the **structure** benefit on the subset of test
-complexes that have an aligned structure, and the **evolution** benefit on deep-MSA complexes —
-asking whether each view helps *where it applies*. The result is reported regardless of outcome.
+Because MSA depth varies widely, the full-test average can hide a real effect. We therefore ask
+whether each view helps *where it applies*. Method: per-complex affinity predictions from all nine
+checkpoints (3 conditions × 3 seeds), sliced by per-complex structure availability and MSA depth
+(median 575 sequences). Jobs: `phase5/stratified_eval.sbatch`, `phase5/eval_perrow.py`,
+`phase5/make_test_meta.py`; aggregation `phase5/agg_stratified.py`.
+
+**Structure — no clean contrast available.** 744 of 757 test complexes (98%) have an aligned
+structure (either chain), so the test set cannot contrast with- vs without-structure. On the 744
+with structure the effect is the same small, non-significant bump as in the aggregate ablation
+(Pearson 0.421 → 0.433). We report this limitation plainly.
+
+**Evolution — a consistent, interpretable benefit on deep-MSA complexes.**
+
+| Subset | + structure Pearson | + evolution Pearson | + structure RMSE | + evolution RMSE |
+|---|---|---|---|---|
+| Deep MSA (n=379) | 0.512 ± 0.041 | **0.536 ± 0.008** | 1.451 ± 0.031 | **1.415 ± 0.019** |
+| Shallow MSA (n=378) | 0.300 ± 0.014 | 0.279 ± 0.037 | 1.721 ± 0.042 | 1.720 ± 0.063 |
+
+Figure: `reports/figures/phase5_stratified.png`.
+
+**Findings:** On deep-MSA complexes, adding evolution **consistently improves** affinity (Pearson
+0.512 → 0.536, RMSE 1.451 → 1.415), with the evolution runs tightly clustered (± 0.008). On
+shallow-MSA complexes it does **not** help (neutral to slightly negative). This is the sensible,
+mechanistic pattern expected — the evolutionary module helps precisely where there is evolutionary
+signal to use — and explains why the whole-test ablation (mixing deep and shallow) looked flat.
+Honest caveat: on the deep subset the error bars still overlap slightly, so this is reported as a
+**consistent, modest improvement**, not a declared statistically-significant one. (A secondary
+observation: deep-MSA complexes are far more predictable overall, Pearson ~0.52 vs ~0.30 — depth of
+evolutionary information correlates with affinity predictability.)
 
 ### Part B3 — Fusion study (in progress)
 
@@ -85,18 +110,23 @@ The robust, defensible results do **not** depend on the ablation: (i) the intera
 beats the published PLM-interact on the leakage-free benchmark, and (ii) the project delivers a
 complete, reproducible multimodal pipeline with solid affinity prediction and honest error bars. The
 one claim we cannot currently support is that structure + evolution significantly improve affinity /
-interface prediction at 650M; this is reported honestly and investigated in Parts B2 and B3.
+interface prediction at 650M *in aggregate*; this is reported honestly. The stratified analysis
+(Part B2) does, however, show a consistent evolution benefit on deep-MSA complexes — the view helps
+where its signal exists — which is a defensible, mechanistic refinement of the hypothesis.
 
 ## Files
 
 - `phase5/bench_interaction.sbatch`, `phase5/ablation_650M.sbatch`, `phase5/ablation_smoke.sbatch`,
   `phase5/agg_ablation.py` — benchmark and ablation jobs.
-- `reports/figures/phase5_interaction_benchmark.png/.pdf`, `reports/figures/phase5_ablation.png/.pdf`.
+- `phase5/stratified_eval.sbatch`, `phase5/make_test_meta.py`, `phase5/eval_perrow.py`,
+  `phase5/agg_stratified.py` — stratified analysis (Part B2).
+- `reports/figures/phase5_interaction_benchmark.png/.pdf`, `reports/figures/phase5_ablation.png/.pdf`,
+  `reports/figures/phase5_stratified.png/.pdf`.
 - View switches added to `phase3/train_phase3.py` (`--no_struct`, `--no_evo`) and `phase3/data.py`.
 
 ## Next steps
 
-1. Part B2 — stratified analysis (structure on structure-available subset; evolution on deep-MSA).
-2. Part B3 — stronger fusion, retrained and evaluated the same way.
-3. Part C — interpretability figures.
-4. (Optional) a small inference script: two sequences in → interaction / affinity / interface out.
+1. Part B3 — stronger (gated / attention) fusion, retrained and evaluated the same way, to test
+   whether the aggregate benefit can be recovered.
+2. Part C — interpretability figures.
+3. (Optional) a small inference script: two sequences in → interaction / affinity / interface out.

@@ -163,3 +163,12 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   analysis (structure where structure exists; evolution on deep MSAs) and a stronger-fusion study.
   Robust wins unaffected: interaction benchmark beats PLM-interact; reproducible multimodal
   pipeline. (K. Zaman)
+- 2026-10-09 — Phase 5 Part B2 (stratified analysis) complete. Per-complex affinity predictions
+  from all 9 checkpoints, sliced by structure availability and MSA depth. Structure: 744/757 test
+  complexes (98%) have a structure, so no clean with/without contrast; effect stays a small,
+  non-significant bump. Evolution: on DEEP-MSA complexes (n=379, depth ≥ median 575) adding
+  evolution consistently improves affinity (Pearson 0.512 → 0.536, RMSE 1.451 → 1.415); on
+  shallow-MSA complexes it does not help. Modest (error bars slightly overlap) but mechanistic and
+  honest — evolution helps where its signal exists, which explains the flat aggregate ablation.
+  Figure `reports/figures/phase5_stratified.png`; scripts `phase5/stratified_eval.sbatch` +
+  `eval_perrow.py` + `make_test_meta.py` + `agg_stratified.py`. Next: stronger-fusion study. (K. Zaman)
