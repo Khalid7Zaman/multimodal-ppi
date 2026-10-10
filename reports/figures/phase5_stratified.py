@@ -47,7 +47,7 @@ for ax, (title, D, hi) in zip(axes,
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(handles, labels, frameon=False, fontsize=10.5, ncol=2, loc="upper center",
            bbox_to_anchor=(0.5, 0.94))
-fig.suptitle("Evolution improves affinity where the alignment is deep — 650M, held-out test (mean $\\pm$ s.d., 3 seeds)",
+fig.suptitle("Evolution improves affinity where the alignment is deep - 650M, held-out test (mean $\\pm$ s.d., 3 seeds)",
              fontsize=12.5, y=1.01)
 fig.tight_layout(rect=[0, 0, 1, 0.90])
 fig.savefig("phase5_stratified.png", dpi=300, bbox_inches="tight")

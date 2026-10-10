@@ -7,7 +7,7 @@
 #SBATCH --output=phase3/logs/ppb_pack_%j.out
 
 # ---------------------------------------------------------------------------
-# Build the MSAs from the SAVED search (res2) — in small BATCHES so result2msa
+# Build the MSAs from the SAVED search (res2) - in small BATCHES so result2msa
 # never over-allocates memory. This means it runs on ANY free node (modest 96 GB),
 # is multi-threaded (fast), and is RESUMABLE (a per-batch marker; re-submitting
 # continues where it stopped). Long 3-day limit so the clock never cuts it off.

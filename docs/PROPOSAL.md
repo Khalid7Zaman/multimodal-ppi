@@ -1,6 +1,6 @@
-# A Multimodal Deep-Learning Framework for Predicting Protein–Protein Interactions and Their Drug-Relevant Properties
+# A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal — **v10**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> Research Proposal, **v10**. Mirrored into the repo (`docs/PROPOSAL.md`) from
 > `10. Research Proposal PPI v10.docx` so every session/tab can read it.
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
@@ -8,11 +8,11 @@
 
 ## Abstract
 
-Protein–protein interactions organise almost everything a cell does, and disrupting them is a proven
+Protein-protein interactions organise almost everything a cell does, and disrupting them is a proven
 route to new medicines. Predicting which proteins interact and how strongly they bind is therefore a
 central goal of computational biology. Sequence-only models have advanced the field but they miss the
 structural signal that governs binding, and the labelled data available to train them are limited. This
-proposal develops a multimodal deep-learning model for protein–protein interaction. From the sequences of
+proposal develops a multimodal deep-learning model for protein-protein interaction. From the sequences of
 two proteins it predicts whether they interact, how tightly they bind, and which residues form the
 interface. The model combines three views of each protein. A protein language model reads the sequence. A
 structural module draws on experimentally determined complex structures and measured binding affinities
@@ -28,7 +28,7 @@ bound complex, which the group already studies.
 Proteins rarely act alone. They work by binding to one another and so build the complexes and signalling
 chains that keep a cell alive. When a binding surface fails the result is often disease. This is also what
 makes these surfaces attractive drug targets, since a molecule that blocks the right interaction can
-correct the fault. Mapping protein–protein interactions and understanding how tightly proteins bind has
+correct the fault. Mapping protein-protein interactions and understanding how tightly proteins bind has
 therefore become central to both biology and medicine.
 
 Measuring interactions in the laboratory is slow and expensive, and it is far from complete. Reference maps
@@ -46,7 +46,7 @@ signals are largely absent from a sequence read on its own.
 The PDBbind database gives a direct way to bring the structural signal in. It collects experimentally
 determined complex structures together with their measured binding affinities [8]. This makes it a trusted
 source of both the shapes of real complexes and the strength of real interactions, which is exactly what a
-model of protein–protein binding needs to learn from. Related work has already used such data for
+model of protein-protein binding needs to learn from. Related work has already used such data for
 structure-based affinity prediction [9], and geometric models read binding surfaces directly to describe
 how proteins meet [10]. The framework proposed here joins these structural signals with sequence and
 evolution in a single model.
@@ -60,7 +60,7 @@ understanding drug targets.
 
 ## 2. Problem Statement
 
-Current methods for predicting protein–protein interactions fall short in four linked ways. Models built
+Current methods for predicting protein-protein interactions fall short in four linked ways. Models built
 from sequence alone have no explicit view of structure. They learn correlations rather than the shapes and
 contacts that cause binding. They also generalise poorly, and performance drops on distant species and on
 proteins with no close relative in the training set. A third weakness is that most predictors give only a
@@ -88,7 +88,7 @@ Closing these gaps is the aim of this proposal.
 ## 4. Aim, Hypothesis and Objectives
 
 The **aim** is to design, build and evaluate a multimodal deep-learning framework that predicts
-protein–protein interactions, their binding strength and their interface residues from sequence, grounded
+protein-protein interactions, their binding strength and their interface residues from sequence, grounded
 in experimentally determined complex structures and measured affinities from PDBbind.
 
 The central **hypothesis** is that joining protein-language-model representations with experimentally
@@ -97,7 +97,7 @@ more accurately and more generally than a model trained on sequence alone.
 
 The aim will be met through five **objectives**:
 
-1. Assemble a training resource for protein–protein interaction from public interaction datasets together
+1. Assemble a training resource for protein-protein interaction from public interaction datasets together
    with the complex structures and measured affinities in PDBbind.
 2. Develop a multimodal encoder that joins protein-language-model, structural and evolutionary
    representations of each protein.
@@ -127,9 +127,9 @@ and complementarily within the group.
 ### 6.1 The proposed architecture
 
 Figure 1 tells the whole framework of the model in one view. Two protein sequences move through five
-stages: an input layer; a multimodal encoder that joins sequence, structural and evolutionary
-representations; a cross-attention reasoning engine that produces a residue-level interaction map; a
-multi-task head that predicts interaction, binding affinity and interface residues; and training on
+stages: an input layer. A multimodal encoder that joins sequence, structural and evolutionary
+representations. A cross-attention reasoning engine that produces a residue-level interaction map. A
+multi-task head that predicts interaction, binding affinity and interface residues. And training on
 experimentally grounded data from PDBbind and public interaction datasets.
 
 It begins at the simplest possible starting point. The sequences of two proteins arrive and nothing else is
@@ -156,7 +156,7 @@ taking interaction labels from public datasets and structures with measured affi
 
 ### 6.2 Data
 
-The project draws on three public sources. Interaction labels come from established protein–protein
+The project draws on three public sources. Interaction labels come from established protein-protein
 interaction datasets, including the sets released with PLM-interact and the leakage-free benchmark used to
 test it fairly [6]. Complex structures and measured binding affinities come from PDBbind [8]. Evolutionary
 information comes from multiple sequence alignments. Using experimental structures and affinities keeps the
@@ -192,21 +192,21 @@ throughout. It moves in phases (Table 1), and each phase ends in a working resul
 | 0 | Environment and baseline | Working environment, PLM-interact reproduced on a small dataset |
 | 1 | Data assembly | Interaction datasets and PDBbind complexes prepared and aligned |
 | 2 | Core interaction model | Sequence and cross-attention model trained and benchmarked against baselines |
-| 3 | Structural and evolutionary modules | PDBbind structures and conservation joined with sequence; measured gains |
+| 3 | Structural and evolutionary modules | PDBbind structures and conservation joined with sequence. Measured gains |
 | 4 | Affinity and interface heads | Binding-affinity and interface-residue predictions |
 | 5 | Benchmarking and analysis | Full comparison, ablations and interpretability study |
 | 6 | Dissemination | Manuscript and public code release |
 
 ## 7. Novelty and Contributions
 
-The novelty lies in combining three things that have not been brought together for protein–protein
+The novelty lies in combining three things that have not been brought together for protein-protein
 interaction. First the project grounds the model in the experimentally measured structures and affinities
 of PDBbind, rather than in predicted structures, so its training signal is trustworthy [8]. Second it joins
 sequence, structure and evolution in a single encoder and reasons across the pair with cross-attention, so
 structure and interaction are learned together rather than apart. Third it predicts interaction, binding
 strength and the interface in one interpretable model, and it does so as a partner to bound-structure
 prediction rather than a rival. The result is not a single new module but a coherent system aimed at the
-outputs that matter for finding and understanding protein–protein drug targets.
+outputs that matter for finding and understanding protein-protein drug targets.
 
 ## 8. Significance of the Study
 
@@ -218,14 +218,14 @@ proteins bind and which residues to target is precisely what turns an interactio
 intervention.
 
 The framework is also built to be used. It complements the group's structure-prediction work and draws on
-shared, public data. Its reach extends to host–pathogen settings, where knowing how viral proteins seize
+shared, public data. Its reach extends to host-pathogen settings, where knowing how viral proteins seize
 human ones matters for anticipating infection [14]. A model that predicts interaction, strength and
 interface from sequence, backed by experimental structures, would be a practical tool for both basic
 research and target discovery.
 
 ## 9. Expected Outcomes
 
-The project should deliver a multimodal deep-learning model that predicts protein–protein interaction,
+The project should deliver a multimodal deep-learning model that predicts protein-protein interaction,
 binding strength and interface residues better than sequence-only baselines. It should also deliver a
 clean, reusable pipeline that pairs public interaction data with PDBbind structures and affinities. The
 affinity predictions should agree with held-out measurements, and the interface predictions should match
@@ -252,17 +252,17 @@ matches the strength of the findings.
 
 ## References
 
-1. Luck, K. et al. A reference map of the human binary protein interactome. *Nature* 580, 402–408 (2020).
+1. Luck, K. et al. A reference map of the human binary protein interactome. *Nature* 580, 402-408 (2020).
 2. Rives, A. et al. Biological structure and function emerge from scaling unsupervised learning to 250 million protein sequences. *Proc. Natl Acad. Sci. USA* 118, e2016239118 (2021).
-3. Lin, Z. et al. Evolutionary-scale prediction of atomic-level protein structure with a language model. *Science* 379, 1123–1130 (2023).
-4. Hayes, T. et al. Simulating 500 million years of evolution with a language model. *Science* 387, 850–858 (2025).
-5. Jumper, J. et al. Highly accurate protein structure prediction with AlphaFold. *Nature* 596, 583–589 (2021).
-6. Liu, D. et al. PLM-interact: extending protein language models to predict protein–protein interactions. *Nat. Commun.* 16, 9012 (2025).
-7. Cong, Q. et al. Protein interaction networks revealed by proteome coevolution. *Science* 365, 185–189 (2019).
-8. Liu, Z. et al. PDB-wide collection of binding data: current status of the PDBbind database. *Bioinformatics* 31, 405–412 (2015).
-9. Su, Q. et al. Robust protein–ligand interaction modeling through integrating physical laws and geometric knowledge for absolute binding free energy calculation. *Chem. Sci.* 16, 5043–5057 (2025).
-10. Gainza, P. et al. Deciphering interaction fingerprints from protein molecular surfaces using geometric deep learning. *Nat. Methods* 17, 184–192 (2020).
-11. Bryant, P., Pozzati, G. & Elofsson, A. Improved prediction of protein–protein interactions using AlphaFold2. *Nat. Commun.* 13, 1265 (2022).
+3. Lin, Z. et al. Evolutionary-scale prediction of atomic-level protein structure with a language model. *Science* 379, 1123-1130 (2023).
+4. Hayes, T. et al. Simulating 500 million years of evolution with a language model. *Science* 387, 850-858 (2025).
+5. Jumper, J. et al. Highly accurate protein structure prediction with AlphaFold. *Nature* 596, 583-589 (2021).
+6. Liu, D. et al. PLM-interact: extending protein language models to predict protein-protein interactions. *Nat. Commun.* 16, 9012 (2025).
+7. Cong, Q. et al. Protein interaction networks revealed by proteome coevolution. *Science* 365, 185-189 (2019).
+8. Liu, Z. et al. PDB-wide collection of binding data: current status of the PDBbind database. *Bioinformatics* 31, 405-412 (2015).
+9. Su, Q. et al. Robust protein-ligand interaction modeling through integrating physical laws and geometric knowledge for absolute binding free energy calculation. *Chem. Sci.* 16, 5043-5057 (2025).
+10. Gainza, P. et al. Deciphering interaction fingerprints from protein molecular surfaces using geometric deep learning. *Nat. Methods* 17, 184-192 (2020).
+11. Bryant, P., Pozzati, G. & Elofsson, A. Improved prediction of protein-protein interactions using AlphaFold2. *Nat. Commun.* 13, 1265 (2022).
 12. Humphreys, I. R. et al. Computed structures of core eukaryotic protein complexes. *Science* 374, eabm4805 (2021).
-13. Vassilev, L. T. et al. In vivo activation of the p53 pathway by small-molecule antagonists of MDM2. *Science* 303, 844–848 (2004).
-14. Stukalov, A. et al. Multilevel proteomics reveals host perturbations by SARS-CoV-2 and SARS-CoV. *Nature* 594, 246–252 (2021).
+13. Vassilev, L. T. et al. In vivo activation of the p53 pathway by small-molecule antagonists of MDM2. *Science* 303, 844-848 (2004).
+14. Stukalov, A. et al. Multilevel proteomics reveals host perturbations by SARS-CoV-2 and SARS-CoV. *Nature* 594, 246-252 (2021).

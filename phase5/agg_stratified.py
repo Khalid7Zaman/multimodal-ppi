@@ -48,13 +48,13 @@ full = load_rows("phase3/runs/mm_650M_s*/test_perrow.json")
 print(f"TEST complexes: {len(meta)} | with structure: {int(has_struct.sum())} "
       f"({100*has_struct.mean():.0f}%) | MSA depth median {dep_med:.0f}")
 
-show("STRUCTURE effect — on complexes WITH an aligned structure",
+show("STRUCTURE effect - on complexes WITH an aligned structure",
      "sequence", seq, "+ structure", sst, has_struct)
-show("STRUCTURE effect — on complexes WITHOUT structure (contrast)",
+show("STRUCTURE effect - on complexes WITHOUT structure (contrast)",
      "sequence", seq, "+ structure", sst, ~has_struct)
 
 deep = depth >= dep_med
-show("EVOLUTION effect — on DEEP-MSA complexes (depth >= median)",
+show("EVOLUTION effect - on DEEP-MSA complexes (depth >= median)",
      "+ structure", sst, "+ evolution", full, deep)
-show("EVOLUTION effect — on SHALLOW-MSA complexes (contrast)",
+show("EVOLUTION effect - on SHALLOW-MSA complexes (contrast)",
      "+ structure", sst, "+ evolution", full, ~deep)

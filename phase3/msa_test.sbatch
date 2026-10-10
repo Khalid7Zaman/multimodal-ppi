@@ -28,7 +28,7 @@ mkdir -p "$TEST" phase3/logs
 echo "node: $(hostname)   threads: $T"
 echo "--- free memory at start (GB) ---"; free -g
 
-# reduced DB (from hit keys) — build if missing
+# reduced DB (from hit keys) - build if missing
 if [ ! -s "${SUB}.dbtype" ]; then
   echo "[A] building reduced DB ..."
   cat "$WORK"/res.[0-9]* | tr '\0' '\n' | awk '$1 ~ /^[0-9]+$/ {print $1}' | sort -un > "$WORK/hit_keys.txt"
@@ -36,7 +36,7 @@ if [ ! -s "${SUB}.dbtype" ]; then
   mmseqs createsubdb "$WORK/hit_keys.txt" "${DB}_h" "${SUB}_h" >/dev/null
 fi
 
-# compact-key DB — the fix. build if missing.
+# compact-key DB - the fix. build if missing.
 if [ ! -s "${CDB}.dbtype" ]; then
   echo "[B] building compact-key DB (convert2fasta -> createdb) ..."
   mmseqs convert2fasta "$SUB" "$WORK/hitdb.fasta" >/dev/null

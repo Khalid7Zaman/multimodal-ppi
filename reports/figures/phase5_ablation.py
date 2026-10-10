@@ -42,9 +42,9 @@ for ax, (title, d), lab in zip(axes, P.items(), ["(a)", "(b)", "(c)"]):
                   fontsize=9, color="#555555", style="italic")
     ax.text(-0.16, 1.06, lab, transform=ax.transAxes, fontsize=12.5, fontweight="bold", va="top")
 
-fig.suptitle("Module ablation — 650M model, held-out test set (mean $\\pm$ s.d., 3 seeds)",
+fig.suptitle("Module ablation - 650M model, held-out test set (mean $\\pm$ s.d., 3 seeds)",
              fontsize=13, y=1.00)
 fig.tight_layout(rect=[0, 0, 1, 0.96])
-fig.savefig("/mnt/user-data/outputs/reports/figures/phase5_ablation.png", dpi=300, bbox_inches="tight")
-fig.savefig("/mnt/user-data/outputs/reports/figures/phase5_ablation.pdf", bbox_inches="tight")
+fig.savefig("phase5_ablation.png", dpi=300, bbox_inches="tight")
+fig.savefig("phase5_ablation.pdf", bbox_inches="tight")
 print("wrote phase5_ablation.png / .pdf")

@@ -64,7 +64,7 @@ class GatedFusion(nn.Module):
       h_struct = h0 + g_s * (hs - h0);   out = h_struct + g_e * he
     The gates g_s, g_e are per-residue sigmoids learned from the features. With both gates
     equal to 1 this reproduces the additive fusion (structure + evolution) exactly, so the
-    gated fusion strictly GENERALISES the default path — it can down-weight a view (e.g. a
+    gated fusion strictly GENERALISES the default path - it can down-weight a view (e.g. a
     shallow, uninformative MSA) instead of always adding it."""
     def __init__(self, d_model, dropout=0.1):
         super().__init__()

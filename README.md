@@ -1,39 +1,54 @@
 # multimodal-ppi
 
-#### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
+A multimodal deep-learning model for protein-protein interaction. From the sequences of two
+proteins, the model predicts three things at the same time: whether the two proteins interact,
+how strongly they bind (binding affinity), and which residues form the contact interface.
 
-#### 软件架构
-软件架构说明
+Author: Khalid Zaman, Research Assistant Professor
+Supervisor: Prof. Zhaoxi Sun
 
+## What the model does
 
-#### 安装教程
+The model combines three views of each protein. A protein language encoder (ESM-2) reads the
+sequence. A structural module turns experimental complex structures into residue contact graphs.
+An evolutionary module measures conservation from multiple sequence alignments. A cross-attention
+layer then lets the two proteins read each other, and three task-specific heads produce the
+interaction, the affinity, and the interface predictions. Training uses only public experimental
+data, so every result can be reproduced from public sources.
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## Main results
 
-#### 使用说明
+- Interaction: on the leakage-free Bernett benchmark (52,048 held-out pairs), the model reaches
+  AUROC 0.717 and AUPR 0.709. On the same test set the publicly released comparison model reaches
+  0.622 and 0.636, and both of our figures are above the value of about 0.69 reported in the
+  literature for this benchmark.
+- Affinity and interface: on 757 held-out complexes, repeated over three seeds, the model reaches
+  an affinity correlation (Pearson) of 0.439 (plus or minus 0.018) and an interface AUPR of 0.281
+  (plus or minus 0.006).
+- The evolutionary view helps where its signal exists: on complexes with deep alignments the
+  affinity correlation rises from 0.512 to 0.536.
+- The interface predictions are interpretable: when mapped back onto the three-dimensional
+  structures, the residues the model marks as interface sit on the real contact surfaces.
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## Repository layout
 
-#### 参与贡献
+- `docs/` : research proposal and model architecture.
+- `phase0_baseline/` : environment setup and reproduction of a published baseline.
+- `phase1/` : data assembly scripts and the data README.
+- `phase2/` : the core interaction model.
+- `phase3/` : the structural and evolutionary modules and the multi-task model.
+- `phase5/` : benchmarking, ablation studies, and interpretability.
+- `reports/` : phase summaries, figures, and a map of where everything lives.
+- `PROJECT_STATE.md` : single source of truth for scope, plan, current status, and decisions.
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+## Data and compute
 
+Training data comes from public sources: the Bernett interaction benchmark and the affinity set
+derived from PDBbind. The large data files are kept out of this repository and are regenerated
+from public sources by the scripts in `phase1/`. The code runs on a GPU cluster under SLURM, with
+PyTorch 2.7.1 and CUDA 12.8.
 
-#### 特技
+## Status
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+Phases 0 through 5 are complete. The remaining work is to prepare the manuscript and the public
+release of the code.
