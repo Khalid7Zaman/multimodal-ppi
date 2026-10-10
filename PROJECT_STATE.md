@@ -2,7 +2,7 @@
 
 **This file is the single source of truth for the project.** Both the writing tab and the
 implementation tab read and update it. It lives in the repo, so it stays current on the laptop,
-on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-09.
+on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-10.
 
 **Related docs (in this repo):** `docs/PROPOSAL.md` (research proposal v10) ·
 `docs/ARCHITECTURE.md` (5-stage design + Phase 3/4 plan) · `WORKFLOW.md` (git sync cheat-sheet) ·
@@ -172,3 +172,11 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   honest — evolution helps where its signal exists, which explains the flat aggregate ablation.
   Figure `reports/figures/phase5_stratified.png`; scripts `phase5/stratified_eval.sbatch` +
   `eval_perrow.py` + `make_test_meta.py` + `agg_stratified.py`. Next: stronger-fusion study. (K. Zaman)
+- 2026-10-10 — Phase 5 Part B3 (fusion study) complete. Added a gated per-residue fusion
+  (`--fusion gated`, generalises additive) and trained it at 650M, all views, 3 seeds. Test:
+  additive Pearson 0.439/RMSE 1.575/AUPR 0.281 vs gated 0.422/1.587/0.288 — tied within error bars,
+  gated marginally worse on affinity. Negative result: the limited aggregate multimodal benefit is
+  not a fusion-capacity problem; additive fusion is sufficient. Figure
+  `reports/figures/phase5_fusion.png`; `phase5/train_gated_650M.sbatch` + `agg_gated.py`; gated
+  module in `phase3/model.py`. Phase 5 Part B complete (benchmark + ablation + stratified + fusion);
+  remaining: Part C interpretability, then Phase 6. (K. Zaman)
