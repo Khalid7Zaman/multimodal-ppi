@@ -51,7 +51,7 @@ def plot_one(npz_path):
     im = axh.imshow(a2b, aspect="auto", cmap="viridis", origin="lower")
     axh.set_xlabel("ligand residue", fontsize=10)
     axh.set_ylabel("receptor residue", fontsize=10)
-    axh.set_title(f"(a) cross-attention: receptor → ligand", fontsize=12, pad=8)
+    axh.set_title(f"(a) cross-attention: receptor -> ligand", fontsize=12, pad=8)
     # red ticks at the TRUE interface residues, just outside the map
     for c in np.where(lt == 1)[0]:
         axh.plot([c, c], [nr - 0.5, nr + max(1, nr * 0.02)], color=RED, lw=0.7, clip_on=False)
@@ -83,7 +83,7 @@ def plot_one(npz_path):
     ax3.text2D(0.0, -0.02, "red circle = true interface;   receptor = round, ligand = triangle",
                transform=ax3.transAxes, fontsize=8, color="#444")
 
-    fig.suptitle(f"Interpretability example — PDB {pdb}  (interface AUPR {aupr:.2f})",
+    fig.suptitle(f"Interpretability example - PDB {pdb}  (interface AUPR {aupr:.2f})",
                  fontsize=12.5, y=1.00)
     fig.tight_layout(rect=[0, 0, 1, 0.95])
     out = os.path.join(OUT, f"phase5_interp_{pdb}")
@@ -96,7 +96,7 @@ def plot_one(npz_path):
 def main():
     files = sorted(glob.glob(os.path.join(INTERP, "*.npz")))
     if not files:
-        print(f"no .npz files in {INTERP} — run phase5/interp_extract.sbatch first")
+        print(f"no .npz files in {INTERP} - run phase5/interp_extract.sbatch first")
         return
     for f in files:
         plot_one(f)

@@ -7,7 +7,7 @@ import numpy as np
 
 runs = sorted(glob.glob("phase3/runs/mm_650M_s*/test_metrics.json"))
 if not runs:
-    sys.exit("No test_metrics.json found yet — the seeded runs are not finished.")
+    sys.exit("No test_metrics.json found yet - the seeded runs are not finished.")
 
 M = [json.load(open(r)) for r in runs]
 print(f"held-out TEST metrics over {len(M)} seeds:")

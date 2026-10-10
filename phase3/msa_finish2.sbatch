@@ -8,7 +8,7 @@
 
 # ---------------------------------------------------------------------------
 # FINAL MSA build: result2msa from the SAVED search (res2), the ONE configuration
-# proven not to crash — SINGLE-THREADED with ~360 GB on a big-memory node.
+# proven not to crash - SINGLE-THREADED with ~360 GB on a big-memory node.
 # Batching was proven not to reduce the memory (a 500-protein batch still OOM'd at 96 GB),
 # so we simply give result2msa the ~240 GB it needs. Search is already done (res2 saved),
 # so this is just the last step. 2-day limit so the clock never cuts it off.
@@ -29,7 +29,7 @@ echo "--- free memory at start (GB) ---"; free -g
 [ -s "$WORK/res2.dbtype" ] || { echo "ERROR: res2 (saved search) missing"; exit 1; }
 [ -s "${CDB}.dbtype" ]     || { echo "ERROR: compact DB missing"; exit 1; }
 
-echo "[D] result2msa (single-threaded, from saved res2) — the slow but reliable step ..."
+echo "[D] result2msa (single-threaded, from saved res2) - the slow but reliable step ..."
 rm -f "$WORK"/msadb2.*
 mmseqs result2msa "$WORK/qdb" "$CDB" "$WORK/res2" "$WORK/msadb2" --threads 1
 

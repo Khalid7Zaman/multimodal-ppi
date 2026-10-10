@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ###############################################################################
-# Phase 0 — Environment setup & PLM-interact baseline
-# Project : multimodal-ppi  (Protein–Protein Interaction model)
+# Phase 0 - Environment setup & PLM-interact baseline
+# Project : multimodal-ppi  (Protein-Protein Interaction model)
 # Author  : Khalid Zaman (RA)      Supervisor: Prof. Zhaoxi Sun, SUAT
 # Date    : 2026-09-09
 #
@@ -28,28 +28,28 @@
 
 
 # =============================================================================
-# Step 1 — Create a dedicated conda environment            [LOGIN NODE]
+# Step 1 - Create a dedicated conda environment            [LOGIN NODE]
 # WHY: giving this project its own environment (named "mmppi") means our exact
 #      package versions can't be disturbed by other projects, and vice-versa.
 #      PLM-interact requires Python 3.10, so we pin that here.
 # =============================================================================
 conda create -n mmppi python=3.10 -y
 
-# Step 1b — Activate the environment                       [LOGIN NODE]
+# Step 1b - Activate the environment                       [LOGIN NODE]
 # WHY: switches your shell into "mmppi" so everything we install lands there.
 #      Your prompt should change to show (mmppi).
 conda activate mmppi
 
 
 # =============================================================================
-# Step 2 — Install PyTorch 2.7.1 for CUDA 12.8             [LOGIN NODE]
+# Step 2 - Install PyTorch 2.7.1 for CUDA 12.8             [LOGIN NODE]
 # WHY: PyTorch is the deep-learning engine. This build is matched to our
 #      Blackwell GPUs and to the version confirmed with the supervisor.
 #      NOTE: this is a large download (~2 GB), so give it a few minutes.
 # =============================================================================
 pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu128
 
-# Step 2b — Confirm the exact version                      [LOGIN NODE]
+# Step 2b - Confirm the exact version                      [LOGIN NODE]
 # WHY: we want to SEE "2.7.1+cu128" printed, proving the correct build installed.
 #      On the login node there is no GPU, so we only check the version string
 #      here; we verify the GPU itself inside a SLURM job in Step 6.
@@ -57,14 +57,14 @@ python -c "import torch; print(torch.__version__)"
 
 
 # =============================================================================
-# Step 3 — Get the PLM-interact baseline code              [LOGIN NODE]
+# Step 3 - Get the PLM-interact baseline code              [LOGIN NODE]
 # WHY: PLM-interact is the published baseline we are reproducing. We clone it
 #      next to our own repo and install it so its scripts become runnable.
 # =============================================================================
 git clone https://github.com/liudan111/PLM-interact.git ~/Projects/PLM-interact
 cd ~/Projects/PLM-interact
 
-# Step 3b — One-line fix to PLM-interact's packaging file    [LOGIN NODE]
+# Step 3b - One-line fix to PLM-interact's packaging file    [LOGIN NODE]
 # WHY: their pyproject.toml lists a "docs = [...]" block inside the [project]
 #      section, which modern setuptools rejects ("`project` must not contain
 #      {'docs'} properties"). This inserts the correct header just above it so
@@ -72,9 +72,9 @@ cd ~/Projects/PLM-interact
 #      (Edits our local clone only.)
 sed -i '/^docs = \[/i [project.optional-dependencies]' pyproject.toml
 
-# Step 3c — Install PLM-interact and ALL its dependencies    [LOGIN NODE]
+# Step 3c - Install PLM-interact and ALL its dependencies    [LOGIN NODE]
 # WHY: this reads the (now-valid) pyproject.toml and installs the exact library
-#      versions the baseline needs — notably transformers==4.40.1 — plus numpy,
+#      versions the baseline needs - notably transformers==4.40.1 - plus numpy,
 #      pandas, scipy, biopython, scikit-learn, huggingface_hub, etc. No separate
 #      dependency install is needed. (torch 2.7.1+cu128 already satisfies
 #      "torch>=2.0.1", so it is left as-is.)
@@ -82,7 +82,7 @@ pip install -e .
 
 
 # =============================================================================
-# Step 4 — Download the models ONCE, while we have internet [LOGIN NODE]
+# Step 4 - Download the models ONCE, while we have internet [LOGIN NODE]
 # WHY: cluster GPU nodes often have NO internet. So we download everything now,
 #      on the login node, into an "offline" folder the GPU job will read from.
 #        - facebook/esm2_t33_650M_UR50D        : the ESM-2 (650M) backbone.
@@ -108,7 +108,7 @@ PY
 
 
 # =============================================================================
-# Step 5 — Build the smoke-test script                     [LOGIN NODE]
+# Step 5 - Build the smoke-test script                     [LOGIN NODE]
 # WHY: PLM-interact ships a tiny demo, PLMinteract/inference/toy_inference.py,
 #      that runs ONE hardcoded pair of proteins and prints one interaction
 #      probability. We copy it to toy_smoke.py and point two of its hardcoded
@@ -123,7 +123,7 @@ grep -nE "^model_name=|^folder_huggingface_download=|^embedding_size" toy_smoke.
 
 
 # =============================================================================
-# Step 6 — Run the smoke test on a GPU, THROUGH SLURM      [GPU JOB]
+# Step 6 - Run the smoke test on a GPU, THROUGH SLURM      [GPU JOB]
 # WHY: the login node has no GPU. The job (phase0_toy_smoke.sbatch) requests one
 #      GPU on the general partitions gpu_5070ti,gpu_5080,gpu_5090 (nodes GPU03/04/
 #      06-10). We deliberately AVOID gpu_6000D / GPU05, reserved for training.
@@ -139,7 +139,7 @@ grep -nE "^model_name=|^folder_huggingface_download=|^embedding_size" toy_smoke.
 
 
 ###############################################################################
-# NEXT — Phase 0 second half (added once the smoke test passes)
+# NEXT - Phase 0 second half (added once the smoke test passes)
 #   Reproduce the benchmark NUMBERS on the D-SCRIPT human test set: build a real
 #   query,text,label CSV from the benchmark, run the same inference command, and
 #   compare AUPR / AUROC against the paper's reported values.
