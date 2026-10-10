@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Phase 1 — download the Bernett gold-standard PPI dataset (leakage-free) from
+# Phase 1 - download the Bernett gold-standard PPI dataset (leakage-free) from
 # Hugging Face (Synthyra/bernett_gold_ppi) via the hf-mirror, and write clean
 # query,text,label CSVs for train / val / test into ~/Projects/ppi-data.
 import os

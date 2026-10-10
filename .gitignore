@@ -30,6 +30,5 @@ slurm-*.out
 desktop.ini
 phase2/*.out
 
-# Local scratch and desktop-app auto-saved copies (never part of the repo)
+# Local scratch (never part of the repo)
 scratch/
-Claude outputs/

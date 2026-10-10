@@ -7,10 +7,10 @@
 #SBATCH --output=phase3/logs/ppb_msa_finish_%j.out
 
 # ---------------------------------------------------------------------------
-# Build the MSAs — FAST version that runs on ordinary (non-giant) nodes.
+# Build the MSAs - FAST version that runs on ordinary (non-giant) nodes.
 #
 # ROOT CAUSE of every earlier failure: result2msa allocates a fixed ~240 GB block
-# PER THREAD, sized from UniRef50's full 58.9M key space — even against a reduced DB,
+# PER THREAD, sized from UniRef50's full 58.9M key space - even against a reduced DB,
 # because the alignment results still reference that huge key range. That forced
 # single-thread + a >380 GB node, and both big nodes are now saturated by other users.
 #

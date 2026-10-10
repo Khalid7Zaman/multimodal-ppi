@@ -37,9 +37,9 @@ for ax, (title, vals, baseline), lab in zip(axes, panels, ["(a)", "(b)"]):
     ax.set_xlabel("higher is better", fontsize=9.5, color="#555555", style="italic")
     ax.text(-0.14, 1.05, lab, transform=ax.transAxes, fontsize=13, fontweight="bold", va="top", ha="left")
 
-fig.suptitle("Interaction prediction — leakage-free Bernett test set (52,048 pairs)",
+fig.suptitle("Interaction prediction - leakage-free Bernett test set (52,048 pairs)",
              fontsize=13.5, y=1.00)
 fig.tight_layout(rect=[0, 0, 1, 0.96])
-fig.savefig("/mnt/user-data/outputs/reports/figures/phase5_interaction_benchmark.png", dpi=300, bbox_inches="tight")
-fig.savefig("/mnt/user-data/outputs/reports/figures/phase5_interaction_benchmark.pdf", bbox_inches="tight")
+fig.savefig("phase5_interaction_benchmark.png", dpi=300, bbox_inches="tight")
+fig.savefig("phase5_interaction_benchmark.pdf", bbox_inches="tight")
 print("wrote phase5_interaction_benchmark.png / .pdf")
