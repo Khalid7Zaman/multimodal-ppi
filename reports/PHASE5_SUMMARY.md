@@ -2,7 +2,7 @@
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP)   **Supervisor:** Prof. Zhaoxi Sun, SUAT
 **Project:** multimodal-ppi (Protein–Protein Interaction)   ·   2026-10-09
-**Status:** IN PROGRESS — interaction benchmark complete; module ablation complete (tied in aggregate at 650M); stratified analysis complete (evolution helps consistently on deep-MSA complexes); fusion study in progress; interpretability remaining.
+**Status:** IN PROGRESS — interaction benchmark, module ablation, stratified analysis, and fusion study all complete; interpretability (Part C) remaining. Headline: interaction model beats PLM-interact; multimodal views give limited aggregate benefit at 650M, but evolution helps consistently on deep-MSA complexes; a gated fusion does not beat the simple additive one.
 
 ---
 
@@ -95,10 +95,27 @@ Honest caveat: on the deep subset the error bars still overlap slightly, so this
 observation: deep-MSA complexes are far more predictable overall, Pearson ~0.52 vs ~0.30 — depth of
 evolutionary information correlates with affinity predictability.)
 
-### Part B3 — Fusion study (in progress)
+### Part B3 — Fusion study (complete)
 
-The current fusion is additive (`h = seq + structure + evolution`). We test whether a stronger
-fusion (e.g. gated or attention-based) recovers a benefit from the extra views.
+The default fusion is additive (`h = structure + evolution`). We tested a **gated fusion** — learned
+per-residue gates that let the model weigh how much to trust each view (and down-weight an
+uninformative one). It strictly generalises additive (gates = 1 reproduce it). Implemented behind
+`--fusion gated` in `train_phase3.py` / `model.py`; trained at 650M, all views, 3 seeds, same
+hyper-parameters as the additive run. Job: `phase5/train_gated_650M.sbatch`; comparison
+`phase5/agg_gated.py`.
+
+| Fusion (650M, all views) | Affinity Pearson ↑ | Affinity RMSE ↓ | Interface AUPR ↑ |
+|---|---|---|---|
+| Additive (original) | **0.439 ± 0.018** | **1.575 ± 0.044** | 0.281 ± 0.006 |
+| Gated (new) | 0.422 ± 0.009 | 1.587 ± 0.092 | 0.288 ± 0.016 |
+
+Figure: `reports/figures/phase5_fusion.png`.
+
+**Findings:** The gated fusion does **not** improve over additive — affinity is marginally worse
+(Pearson 0.439 → 0.422, RMSE 1.575 → 1.587), interface marginally better (0.281 → 0.288), all within
+the error bars (tied). This is a clean negative result: the limited aggregate multimodal benefit at
+650M is **not** a fusion-capacity problem — a more flexible fusion does not help. The simple additive
+fusion is sufficient, and the binding signal is dominated by the strong sequence encoder.
 
 ## Part C — Interpretability (pending)
 
@@ -120,13 +137,14 @@ where its signal exists — which is a defensible, mechanistic refinement of the
   `phase5/agg_ablation.py` — benchmark and ablation jobs.
 - `phase5/stratified_eval.sbatch`, `phase5/make_test_meta.py`, `phase5/eval_perrow.py`,
   `phase5/agg_stratified.py` — stratified analysis (Part B2).
+- `phase5/gated_smoke.sbatch`, `phase5/train_gated_650M.sbatch`, `phase5/agg_gated.py` — fusion study (Part B3).
 - `reports/figures/phase5_interaction_benchmark.png/.pdf`, `reports/figures/phase5_ablation.png/.pdf`,
-  `reports/figures/phase5_stratified.png/.pdf`.
-- View switches added to `phase3/train_phase3.py` (`--no_struct`, `--no_evo`) and `phase3/data.py`.
+  `reports/figures/phase5_stratified.png/.pdf`, `reports/figures/phase5_fusion.png/.pdf`.
+- View switches (`--no_struct`, `--no_evo`) and the gated fusion (`--fusion`) added to
+  `phase3/train_phase3.py` / `phase3/model.py` / `phase3/data.py`.
 
 ## Next steps
 
-1. Part B3 — stronger (gated / attention) fusion, retrained and evaluated the same way, to test
-   whether the aggregate benefit can be recovered.
-2. Part C — interpretability figures.
-3. (Optional) a small inference script: two sequences in → interaction / affinity / interface out.
+1. Part C — interpretability figures (cross-attention maps; predicted interfaces on 3D structures).
+2. (Optional) a small inference script: two sequences in → interaction / affinity / interface out.
+3. Phase 6 — manuscript and public code release.
