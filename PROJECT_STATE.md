@@ -60,8 +60,9 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 - Phase 3 — Add structural (PDBbind) and evolutionary modules; bring the affinity + interface
   heads forward. **— DONE (2026-09-29).**
 - Phase 4 — Affinity + interface heads. (Completed within Phase 3 — see §8.)
-- Phase 5 — Benchmarking, ablations, interpretability. **— IN PROGRESS.** Interaction benchmark
-  vs PLM-interact complete (see §8); ablation + interpretability remaining.
+- Phase 5 — Benchmarking, ablations, interpretability. **— COMPLETE (2026-10-10).** Interaction
+  benchmark vs PLM-interact; module ablation; stratified analysis; gated-fusion study; and
+  interpretability figures all done (see §8 and `reports/PHASE5_SUMMARY.md`).
 - Phase 6 — Manuscript and public code release.
 
 ## 7. Current status
@@ -180,3 +181,11 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   `reports/figures/phase5_fusion.png`; `phase5/train_gated_650M.sbatch` + `agg_gated.py`; gated
   module in `phase3/model.py`. Phase 5 Part B complete (benchmark + ablation + stratified + fusion);
   remaining: Part C interpretability, then Phase 6. (K. Zaman)
+- 2026-10-10 — Phase 5 Part C (interpretability) complete; PHASE 5 COMPLETE. Captured cross-attention
+  maps + per-residue interface probabilities + Cα coordinates for example complexes (auto-selected by
+  interface AUPR): 2MCN (0.94), 4KVG (0.91), 1H0T (0.89). Figures show the cross-attention
+  concentrating at interface residue bands and the predicted interface residues sitting on the real
+  3D contact surface (clearest in 4KVG) — predictions are spatially coherent and interpretable.
+  Scripts `phase5/interp_extract.sbatch` + `interp_extract.py` + `interp_plot.py`; figures
+  `reports/figures/phase5_interp_{2MCN,4KVG,1H0T}.png`. Next: Phase 6 (manuscript + public code
+  release); optional inference script. (K. Zaman)
