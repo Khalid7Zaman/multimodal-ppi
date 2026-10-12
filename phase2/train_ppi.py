@@ -1,23 +1,39 @@
 #!/usr/bin/env python
 """
-Phase 2 - core interaction model: ESM-2 encoder (fine-tuned end-to-end) + cross-attention.
-Trains on the Bernett interaction CSVs (query,text,label); reports AUROC / AUPR.
+Phase 2 - core interaction model: a protein language model (ESM-2 or ESM-C) fine-tuned
+end-to-end + cross-attention. Trains on the Bernett interaction CSVs (query,text,label) and
+reports AUROC / AUPR. The sequence backbone is selectable with --backbone so ESM-2 and ESM-C
+can be compared under identical settings.
 """
-import os, argparse, time, math
+import os, argparse, time, math, random
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+import numpy as np
 import torch, torch.nn as nn
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from transformers import AutoModel, AutoTokenizer
 from sklearn.metrics import roc_auc_score, average_precision_score
 
+
+def set_seed(seed):
+    random.seed(seed); np.random.seed(seed)
+    torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
+
+
+def backbone_load_kwargs(backbone):
+    """Extra kwargs for AutoModel/AutoTokenizer.from_pretrained for each backbone."""
+    if backbone == "esmc":
+        return {"trust_remote_code": True, "attn_implementation": "sdpa"}
+    return {}
+
+
 # ---------------- model ----------------
 class CrossAttnPPI(nn.Module):
-    def __init__(self, esm_path, d_model=256, n_heads=8, dropout=0.1):
+    def __init__(self, esm_path, d_model=256, n_heads=8, dropout=0.1, esm_kwargs=None):
         super().__init__()
-        self.esm = AutoModel.from_pretrained(esm_path)          # ESM-2, fine-tuned end to end
-        d = self.esm.config.hidden_size
+        self.esm = AutoModel.from_pretrained(esm_path, **(esm_kwargs or {}))   # ESM-2 or ESM-C
+        d = self.esm.config.hidden_size                                        # 1280 (ESM-2) / 1152 (ESM-C)
         self.proj = nn.Linear(d, d_model)
         self.a2b = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
         self.b2a = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
@@ -42,6 +58,7 @@ class CrossAttnPPI(nn.Module):
         feats = torch.cat([vA + vB, vA * vB, (vA - vB).abs()], dim=-1)  # symmetric in A,B
         return self.head(feats).squeeze(-1)
 
+
 # ---------------- data ----------------
 class PairData(Dataset):
     def __init__(self, csv, limit=None):
@@ -53,14 +70,17 @@ class PairData(Dataset):
         r = self.df.iloc[i]
         return str(r["query"]), str(r["text"]), float(r["label"])
 
+
 def collate_fn(tok, max_length):
     def f(batch):
-        A = [b[0] for b in batch]; B = [b[1] for b in batch]
+        A = [b[0][: max_length - 2] for b in batch]   # pre-slice so it works for either tokenizer
+        B = [b[1][: max_length - 2] for b in batch]
         y = torch.tensor([b[2] for b in batch], dtype=torch.float)
-        ta = tok(A, padding=True, truncation=True, max_length=max_length, return_tensors="pt")
-        tb = tok(B, padding=True, truncation=True, max_length=max_length, return_tensors="pt")
+        ta = tok(A, padding=True, return_tensors="pt")
+        tb = tok(B, padding=True, return_tensors="pt")
         return ta.input_ids, ta.attention_mask, tb.input_ids, tb.attention_mask, y
     return f
+
 
 @torch.no_grad()
 def evaluate(model, loader, device):
@@ -74,9 +94,11 @@ def evaluate(model, loader, device):
     ap = average_precision_score(ys, ps) if len(set(ys)) > 1 else float("nan")
     return au, ap
 
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--esm", required=True)
+    ap.add_argument("--backbone", choices=["esm2", "esmc"], default="esm2")
     ap.add_argument("--train", required=True)
     ap.add_argument("--val", default=None)
     ap.add_argument("--out", required=True)
@@ -84,25 +106,32 @@ def main():
     ap.add_argument("--batch", type=int, default=4)
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--epochs", type=int, default=3)
+    ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--overfit", action="store_true")
     ap.add_argument("--log_every", type=int, default=100)
     args = ap.parse_args()
 
+    set_seed(args.seed)
     os.makedirs(args.out, exist_ok=True)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("device:", device, flush=True)
-    tok = AutoTokenizer.from_pretrained(args.esm)
-    model = CrossAttnPPI(args.esm).to(device)
+    print(f"device: {device} | backbone: {args.backbone} | seed: {args.seed}", flush=True)
+
+    esm_kwargs = backbone_load_kwargs(args.backbone)
+    tok = AutoTokenizer.from_pretrained(args.esm, **esm_kwargs)
+    model = CrossAttnPPI(args.esm, esm_kwargs=esm_kwargs).to(device)
     coll = collate_fn(tok, args.max_length)
 
     train_ds = PairData(args.train, limit=args.limit)
-    train_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=True, collate_fn=coll, num_workers=2)
+    g = torch.Generator(); g.manual_seed(args.seed)
+    train_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=True,
+                          collate_fn=coll, num_workers=2, generator=g)
     if args.overfit:
         val_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=False, collate_fn=coll)
         print(f"OVERFIT mode on {len(train_ds)} pairs", flush=True)
     elif args.val:
-        val_dl = DataLoader(PairData(args.val), batch_size=args.batch, shuffle=False, collate_fn=coll, num_workers=2)
+        val_dl = DataLoader(PairData(args.val), batch_size=args.batch, shuffle=False,
+                            collate_fn=coll, num_workers=2)
     else:
         val_dl = None
 
@@ -129,6 +158,7 @@ def main():
         print(msg, flush=True)
     torch.save(model.state_dict(), os.path.join(args.out, "last.pt"))
     print("done ->", args.out, flush=True)
+
 
 if __name__ == "__main__":
     main()
