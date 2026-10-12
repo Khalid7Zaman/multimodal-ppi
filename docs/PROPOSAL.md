@@ -240,14 +240,14 @@ matches the strength of the findings.
 
 | Dimension | PLM-interact | Proposed framework |
 |---|---|---|
-| Sequence representation | ESM-2 | ESM-2 / ESM-3 |
+| Sequence representation | ESM-2 | ESM-2 (ESM-3 planned) |
 | Structural information | None | Experimental complexes (PDBbind) |
 | Evolutionary information | None | Multiple sequence alignments |
-| Pair reasoning | Limited | Cross-attention transformer |
+| Pair reasoning | Joint pair encoder (full self-attention over the pair) | Cross-attention between separate per-protein encoders |
 | Interaction prediction | Yes | Yes |
 | Binding strength | No | Yes (from PDBbind affinities) |
 | Interface prediction | No | Yes |
-| Interpretability | Limited | Residue-level |
+| Interpretability | Attention-based (not residue-level) | Residue-level interface + attention maps |
 | Bound-structure prediction | No | No (complementary to group work) |
 
 ## References
