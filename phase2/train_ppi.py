@@ -3,7 +3,9 @@
 Phase 2 - core interaction model: a protein language model (ESM-2 or ESM-C) fine-tuned
 end-to-end + cross-attention. Trains on the Bernett interaction CSVs (query,text,label) and
 reports AUROC / AUPR. The sequence backbone is selectable with --backbone so ESM-2 and ESM-C
-can be compared under identical settings.
+can be compared under identical settings. Optional training levers (all default to the plain
+baseline behaviour): learning-rate warmup + linear decay (--sched linear --warmup_steps N) and
+gradient accumulation for a larger effective batch (--grad_accum K).
 """
 import os, argparse, time, math, random
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -12,7 +14,7 @@ import numpy as np
 import torch, torch.nn as nn
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, get_linear_schedule_with_warmup
 from sklearn.metrics import roc_auc_score, average_precision_score
 
 
@@ -104,7 +106,10 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--max_length", type=int, default=512)
     ap.add_argument("--batch", type=int, default=4)
+    ap.add_argument("--grad_accum", type=int, default=1)          # effective batch = batch * grad_accum
     ap.add_argument("--lr", type=float, default=1e-5)
+    ap.add_argument("--sched", choices=["none", "linear"], default="none")
+    ap.add_argument("--warmup_steps", type=int, default=0)
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--limit", type=int, default=None)
@@ -115,7 +120,8 @@ def main():
     set_seed(args.seed)
     os.makedirs(args.out, exist_ok=True)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"device: {device} | backbone: {args.backbone} | seed: {args.seed}", flush=True)
+    print(f"device: {device} | backbone: {args.backbone} | seed: {args.seed} | "
+          f"eff_batch: {args.batch * args.grad_accum} | lr: {args.lr} | sched: {args.sched}", flush=True)
 
     esm_kwargs = backbone_load_kwargs(args.backbone)
     tok = AutoTokenizer.from_pretrained(args.esm, **esm_kwargs)
@@ -137,18 +143,32 @@ def main():
 
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
     lossf = nn.BCEWithLogitsLoss()
+    sched = None
+    if args.sched == "linear":
+        total = (len(train_dl) // args.grad_accum) * args.epochs
+        sched = get_linear_schedule_with_warmup(opt, args.warmup_steps, max(total, 1))
+        print(f"linear schedule: warmup {args.warmup_steps} / total {total} optimizer steps", flush=True)
+
     best = -1.0
     for epoch in range(1, args.epochs + 1):
         model.train(); t0 = time.time(); tot = 0.0; n = 0; step = 0; nsteps = len(train_dl)
+        opt.zero_grad()
         for a_ids, a_mask, b_ids, b_mask, y in train_dl:
             a_ids, a_mask, b_ids, b_mask, y = (t.to(device) for t in (a_ids, a_mask, b_ids, b_mask, y))
-            opt.zero_grad()
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 loss = lossf(model(a_ids, a_mask, b_ids, b_mask), y)
-            loss.backward(); opt.step()
+            (loss / args.grad_accum).backward()
             tot += loss.item() * len(y); n += len(y); step += 1
+            if step % args.grad_accum == 0:
+                opt.step()
+                if sched is not None: sched.step()
+                opt.zero_grad()
             if step % args.log_every == 0:
                 print(f"  epoch {epoch} step {step}/{nsteps} | loss {loss.item():.4f} | {n/max(time.time()-t0,1e-6):.0f} pairs/s", flush=True)
+        if step % args.grad_accum != 0:          # flush any remaining accumulated gradients
+            opt.step()
+            if sched is not None: sched.step()
+            opt.zero_grad()
         msg = f"epoch {epoch}: train_loss {tot/max(n,1):.4f} ({time.time()-t0:.0f}s)"
         if val_dl is not None:
             au, apr = evaluate(model, val_dl, device)
