@@ -27,7 +27,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 
 ## 3. Architecture (5 stages)
 1. **Input Layer**: Protein A, Protein B to shared encoder.
-2. **Multimodal Encoder**: Sequence module (ESM-2 / ESM-3, prefer the newer version), Structural
+2. **Multimodal Encoder**: Sequence module (ESM-C, selected over ESM-2 by ablation), Structural
    module (PDBbind complexes to residue contact graphs), Evolutionary module (MSA to conservation encoder).
 3. **Cross-Protein Reasoning Engine**: cross-attention transformer to interaction map.
 4. **Multi-Task Head**: Interaction, Binding affinity, Interface residues (with interpretability).
@@ -42,7 +42,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   is reserved for model training**, so final training runs there. Supervisor guidance: use the
   RTX 6000D or the RTX 5090 for training/heavy work.
 - GPU hardware: RTX 5090 (32 GB), RTX 6000D (85 GB), RTX 5080, and RTX 5070 Ti (16 GB) cards.
-- Software: **PyTorch 2.7.1 with CUDA 12.8 (`torch 2.7.1+cu128`)**. Preferred protein language model is the newer ESM (ESM-3).
+- Software: **PyTorch 2.7.1 with CUDA 12.8 (`torch 2.7.1+cu128`)**. Sequence backbone: ESM-C (600M), selected over ESM-2 (650M) by a controlled ablation on the leakage-free benchmark.
 - Author: Khalid Zaman, Research Assistant Professor (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 
 ## 5. Data and validation (confirmed with supervisor)
@@ -114,7 +114,7 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
 - 2026-09-09: ADMET properties, peptide developability, and protein-ligand binding recorded as
   later extensions, not part of the current phase. (Prof. Sun)
 - 2026-09-09: Compute confirmed: SLURM scheduler. GPU05 (RTX 6000D) reserved for model training.
-  general tasks on CPU03/05/06 and GPU03/04/06-10. Environment: `torch 2.7.1+cu128`. Prefer ESM-3.
+  general tasks on CPU03/05/06 and GPU03/04/06-10. Environment: `torch 2.7.1+cu128`. Prefer ESM-C.
   No in-house data or wet-lab validation yet. (Prof. Sun)
 - 2026-09-09: Phase 0 complete. PLM-interact-650M reproduced on the D-SCRIPT human test set:
   AUROC 0.9885 / AUPR 0.9174. (K. Zaman)
