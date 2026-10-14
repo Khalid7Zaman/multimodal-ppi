@@ -142,6 +142,37 @@ Figure: `reports/figures/phase3_test_results.png`.
 3. **These are the numbers to report.** They supersede the single-run validation values for any
    external comparison, because they are measured on data the model never saw and carry error bars.
 
+## Backbone upgrade: ESM-C (selected sequence backbone)
+
+The results above use the ESM-2 650M encoder. Following the Phase 2 interaction-model ablation,
+which compared ESM-2 (650M) and ESM-C (600M) under identical settings on the leakage-free Bernett
+test set and selected ESM-C (higher AUPR and AUROC, with fewer parameters), the multimodal model
+was retrained with ESM-C so the whole system uses one coherent backbone. The run is identical to
+the ESM-2 run in every respect except the backbone (all three views, three seeds, 8 epochs, batch
+2, lr 1e-5). The structure contact maps and the MSA conservation features are keyed to the
+sequence, not the tokenizer, so they are reused unchanged. An alignment smoke test
+(`phase3/smoke_esmc_mm.py`) first confirmed that ESM-C keeps residues at token positions 1..n, so
+the per-residue structure, evolution and interface labels still line up exactly.
+
+### Held-out test set: ESM-2 vs ESM-C (three seeds, mean +/- s.d.)
+
+| Metric | ESM-2 650M | ESM-C 600M |
+|---|---|---|
+| Affinity Pearson *r* up | 0.439 +/- 0.018 | 0.441 +/- 0.009 |
+| Affinity RMSE down | 1.575 +/- 0.044 | 1.568 +/- 0.079 |
+| Interface AUPR up | 0.281 +/- 0.006 | 0.298 +/- 0.011 |
+
+Figure: `reports/figures/phase3_backbone_test.png`.
+
+**Findings.** On binding affinity the two backbones are statistically tied: the means differ by
+0.002 in Pearson and 0.007 in RMSE, well inside the error bars. On interface detection ESM-C is
+modestly but consistently better: all three ESM-C seeds (0.288, 0.310, 0.295) sit at or above the
+ESM-2 range (0.276-0.287), so the gain is a small real effect rather than noise. Taken together
+with the Phase 2 interaction result (ESM-C ahead on AUPR and AUROC), ESM-C is at least as strong
+as ESM-2 on every task and better on two, at fewer parameters. ESM-C is adopted as the single
+sequence backbone. These ESM-C figures are the reported multimodal numbers; the ESM-2 figures are
+retained as the backbone ablation.
+
 ## Files (in `phase3/`)
 
 - `struct_features.py`, `struct_module.py`, structural featurizer and graph network.
