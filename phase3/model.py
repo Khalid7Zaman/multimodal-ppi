@@ -43,14 +43,19 @@ class StubSeqEncoder(nn.Module):
         return self.emb(ids)
 
 
-def make_esm_encoder(esm_path):
-    """Real sequence encoder: wraps a pretrained ESM-2 (used for actual training)."""
+def make_esm_encoder(esm_path, esm_kwargs=None):
+    """Real sequence encoder: wraps a pretrained protein language model (ESM-2 or ESM-C).
+
+    `esm_kwargs` carries any backbone-specific load options (for ESM-C these are
+    trust_remote_code=True and attn_implementation="sdpa"); it defaults to none, so ESM-2
+    loads exactly as before. The projection downstream reads the width from config.hidden_size,
+    so switching backbone (1280 for ESM-2, 1152 for ESM-C) needs no other change."""
     from transformers import AutoModel
 
     class EsmSeqEncoder(nn.Module):
         def __init__(self, path):
             super().__init__()
-            self.esm = AutoModel.from_pretrained(path)
+            self.esm = AutoModel.from_pretrained(path, **(esm_kwargs or {}))
             self.d = self.esm.config.hidden_size
 
         def forward(self, ids, mask):
