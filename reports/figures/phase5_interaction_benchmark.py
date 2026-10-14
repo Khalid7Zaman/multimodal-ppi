@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Phase 5 - interaction benchmark figure: this work vs PLM-interact on the
-leakage-free Bernett test set (52,048 pairs). Serif type; no names embedded."""
+"""Phase 5 - interaction benchmark figure: this work (selected ESM-C backbone) vs PLM-interact on
+the leakage-free Bernett test set (52,048 pairs). Serif type; no names embedded."""
 import numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -13,10 +13,12 @@ plt.rcParams.update({"font.family": "serif",
                      "font.serif": ["Liberation Serif", "Times New Roman", "DejaVu Serif"],
                      "font.size": 12, "axes.linewidth": 0.9, "axes.edgecolor": "#444444"})
 
-models = ["This work\n(650M)", "PLM-interact\n(650M)"]
+models = ["This work\n(ESM-C 600M)", "PLM-interact\n(650M)"]
 colors = ["#2b6cb0", "#9aa5b1"]
-panels = [("Interaction AUROC", [0.7174, 0.6224], None),
-          ("Interaction AUPR",  [0.7093, 0.6359], 0.69)]  # 0.69 = published baseline (AUPR)
+# This work = selected ESM-C interaction model on the Bernett test set (AUROC 0.724 / AUPR 0.719);
+# PLM-interact-650M as released (AUROC 0.622 / AUPR 0.636).
+panels = [("Interaction AUROC", [0.7238, 0.6224], None),
+          ("Interaction AUPR",  [0.7192, 0.6359], 0.69)]  # 0.69 = published baseline (AUPR)
 
 fig, axes = plt.subplots(1, 2, figsize=(8.4, 4.3))
 for ax, (title, vals, baseline), lab in zip(axes, panels, ["(a)", "(b)"]):

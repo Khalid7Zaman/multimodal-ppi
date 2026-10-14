@@ -2,7 +2,7 @@
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP) **Supervisor:** Prof. Zhaoxi Sun, SUAT
 **Project:** multimodal-ppi (Protein-Protein Interaction),   2026-10-09
-**Status:** COMPLETE: interaction benchmark, module ablation, stratified analysis, fusion study, and interpretability all done. Headline: the interaction model beats PLM-interact on the leakage-free benchmark. The multimodal views give limited aggregate benefit at 650M, but evolution helps consistently on deep-MSA complexes. A gated fusion does not beat the simple additive one. And the model's interface predictions are spatially coherent and interpretable.
+**Status:** COMPLETE: interaction benchmark, module ablation, stratified analysis, fusion study, and interpretability all done. Headline: the interaction model beats PLM-interact on the leakage-free benchmark. The multimodal views give limited aggregate benefit at 650M, but evolution helps consistently on deep-MSA complexes. A gated fusion does not beat the simple additive one. And the model's interface predictions are spatially coherent and interpretable. (Backbone: the interaction benchmark uses the selected ESM-C backbone; the multimodal design studies below are on the 650M model, and the backbone ablation found the two tied on those tasks.)
 
 ---
 
@@ -15,18 +15,26 @@ PLM-interact, (B) module ablation sequence then + structure then + evolution, (B
 
 ## Part A: Interaction benchmark (leakage-free Bernett test set)
 
-Both models scored on the **identical** Bernett test set (52,048 pairs), same metrics, same 650M
-backbone. Inference only.
+Both models scored on the **identical** Bernett test set (52,048 pairs), same metrics. This work
+uses the selected ESM-C backbone (see the backbone ablation, `phase5/BACKBONE_COMPARISON.md`);
+PLM-interact is the released 650M model. Inference only.
 
 | Model (same test set) | AUROC ↑ | AUPR ↑ |
 |---|---|---|
-| **This work: CrossAttnPPI-650M** | **0.717** | **0.709** |
+| **This work: CrossAttnPPI (ESM-C 600M)** | **0.724** | **0.719** |
 | PLM-interact-650M (as released) | 0.622 | 0.636 |
 | Published baselines (Bernett) | n/a | ~0.69 |
 
-Our model (trained on the Bernett train split) leads PLM-interact (used as released) by ~+0.095
-AUROC / +0.073 AUPR, and sits above the ~0.69 published baselines. Figure:
+Our model (trained on the Bernett train split) leads PLM-interact (used as released) by ~+0.102
+AUROC / +0.083 AUPR, and sits above the ~0.69 published baselines. Figure:
 `reports/figures/phase5_interaction_benchmark.png`. Job: `phase5/bench_interaction.sbatch`.
+
+**Backbone note.** The interaction model above uses the selected ESM-C backbone. The multimodal
+design studies that follow (Parts B, B2, B3, C) were run on the 650M multimodal model. The backbone
+ablation found ESM-2 and ESM-C statistically tied on the multimodal affinity / interface tasks
+(affinity Pearson 0.441 vs 0.439, interface AUPR 0.298 vs 0.281, see `reports/PHASE3_SUMMARY.md`),
+so these design-study conclusions are backbone-robust; they can be regenerated on ESM-C if required
+for the manuscript.
 
 ## Part B: Module ablation (650M, held-out test set)
 
