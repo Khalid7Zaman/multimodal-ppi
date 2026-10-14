@@ -1,0 +1,12 @@
+{
+  "tag": "ours_650M",
+  "n": 52048,
+  "threshold": 0.5,
+  "AUPR": 0.7093,
+  "AUROC": 0.7174,
+  "Precision": 0.6544,
+  "Recall": 0.6606,
+  "F1": 0.6575,
+  "Accuracy": 0.6559,
+  "MCC": 0.3118
+}

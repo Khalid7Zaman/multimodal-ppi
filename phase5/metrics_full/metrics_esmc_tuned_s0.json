@@ -1,0 +1,13 @@
+{
+  "tag": "esmc_tuned_s0",
+  "backbone": "esmc",
+  "n": 52048,
+  "threshold": 0.5,
+  "AUPR": 0.7179,
+  "AUROC": 0.721,
+  "Precision": 0.6358,
+  "Recall": 0.7357,
+  "F1": 0.6821,
+  "Accuracy": 0.6571,
+  "MCC": 0.3182
+}
