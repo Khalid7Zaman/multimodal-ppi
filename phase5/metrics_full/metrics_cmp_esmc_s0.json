@@ -1,0 +1,13 @@
+{
+  "tag": "cmp_esmc_s0",
+  "backbone": "esmc",
+  "n": 52048,
+  "threshold": 0.5,
+  "AUPR": 0.7192,
+  "AUROC": 0.7238,
+  "Precision": 0.6525,
+  "Recall": 0.6844,
+  "F1": 0.668,
+  "Accuracy": 0.6599,
+  "MCC": 0.3202
+}
