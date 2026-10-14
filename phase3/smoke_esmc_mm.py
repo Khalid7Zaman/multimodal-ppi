@@ -86,18 +86,19 @@ def main():
         return o
 
     b = mv(batch)
+    ok = ~torch.isnan(b["pkd"])
+    m = b["rec"]["iface"] >= 0
+    # Compute the loss INSIDE autocast, exactly as train_phase3.py does, so the bf16 activations
+    # and the loss share a dtype and the backward pass is clean.
     with torch.autocast("cuda", dtype=torch.bfloat16):
         out = model(b["rec"]["ids"], b["rec"]["mask"], b["rec"]["adj"], b["rec"]["evo"],
                     b["lig"]["ids"], b["lig"]["mask"], b["lig"]["adj"], b["lig"]["evo"])
+        loss = nn.functional.mse_loss(out["affinity"][ok], b["pkd"][ok]) if ok.any() else out["affinity"].sum() * 0.0
+        if m.any():
+            loss = loss + nn.functional.binary_cross_entropy_with_logits(out["iface_a"][m], b["rec"]["iface"][m])
     for k, v in out.items():
         print(f"  out {k:11s} shape {tuple(v.shape)}  finite={torch.isfinite(v).all().item()}")
-
-    # one multi-task loss + backward to confirm gradients flow through the ESM-C encoder
-    ok = ~torch.isnan(b["pkd"])
-    loss = nn.functional.mse_loss(out["affinity"][ok], b["pkd"][ok]) if ok.any() else out["affinity"].sum() * 0.0
-    m = b["rec"]["iface"] >= 0
-    if m.any():
-        loss = loss + nn.functional.binary_cross_entropy_with_logits(out["iface_a"][m], b["rec"]["iface"][m])
+    print(f"  (interface labels in this mini-batch: {'yes' if m.any() else 'none - affinity path exercised'})")
     loss.backward()
     grad_ok = any(p.grad is not None and torch.isfinite(p.grad).all() for p in model.parameters())
     print(f"  loss {float(loss):.4f}   gradients flow: {grad_ok}")
