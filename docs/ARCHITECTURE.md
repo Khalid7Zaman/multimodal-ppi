@@ -16,7 +16,7 @@ Two protein sequences (A, B). A single **shared** encoder reads both, so A,B and
 treated symmetrically. Structure/MSA are optional extra inputs used where available.
 
 ### Stage 2: Multimodal encoder (three views per protein)
-- **Sequence module**: ESM-2 (fine-tuned end-to-end. ESM-3 preferred later), per-residue
+- **Sequence module**: ESM-C (fine-tuned end-to-end; selected over ESM-2 by a controlled ablation), per-residue
   embeddings to projected to `d_model`. *Implemented in Phase 2.*
 - **Structural module**: an experimental complex (PDBbind / RCSB mmCIF) to per-protein
   **residue contact graph** (nodes = residues, edges = spatial contacts) to graph network.

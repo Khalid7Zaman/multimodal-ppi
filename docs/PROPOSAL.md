@@ -164,7 +164,7 @@ training signal trustworthy and removes any dependence on predicted structures.
 
 ### 6.3 Model and training
 
-The sequence module fine-tunes an ESM-2 backbone on paired sequences [3,6]. The structural module encodes
+The sequence module fine-tunes a protein language model backbone on paired sequences [3,6]. Two candidate backbones, ESM-2 (650M) and ESM-C (600M), were compared under identical settings on the leakage-free benchmark, and ESM-C was selected because it gave the stronger ranking performance with fewer parameters. The structural module encodes
 each complex from PDBbind as a residue contact graph and processes it with a graph network. The
 evolutionary module encodes conservation from alignments. These three views are joined and passed to the
 cross-attention module, and the shared output feeds the interaction, affinity and interface heads under one
@@ -174,8 +174,8 @@ available GPUs.
 
 ### 6.4 Evaluation
 
-Interaction prediction is benchmarked against PLM-interact and its published baselines on shared held-out
-data [6]. Binding-affinity prediction is measured on held-out PDBbind complexes and compared with
+Interaction prediction is benchmarked against PLM-interact and its published baselines on the same leakage-free held-out
+data [6], and is reported with the same metric set used in that work: the area under the precision-recall curve (AUPR), the area under the ROC curve (AUROC), precision, recall, F1 and accuracy, together with the Matthews correlation coefficient (MCC). Binding-affinity prediction is measured on held-out PDBbind complexes and compared with
 established structure-based scoring approaches [9]. Interface predictions are checked against the contacts
 seen in known complexes [10,12]. Ablation studies remove one module or one output at a time, so that the
 contribution of structure and of evolution can each be seen clearly.
@@ -240,7 +240,7 @@ matches the strength of the findings.
 
 | Dimension | PLM-interact | Proposed framework |
 |---|---|---|
-| Sequence representation | ESM-2 | ESM-2 (ESM-3 planned) |
+| Sequence representation | ESM-2 | ESM-C (selected over ESM-2) |
 | Structural information | None | Experimental complexes (PDBbind) |
 | Evolutionary information | None | Multiple sequence alignments |
 | Pair reasoning | Joint pair encoder (full self-attention over the pair) | Cross-attention between separate per-protein encoders |
