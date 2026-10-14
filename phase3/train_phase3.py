@@ -30,6 +30,16 @@ def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 from torch.utils.data import DataLoader, Subset
+
+
+def backbone_load_kwargs(backbone):
+    """Extra kwargs for AutoModel / AutoTokenizer.from_pretrained for each backbone.
+    ESM-C needs its custom remote code and the SDPA attention path; ESM-2 needs nothing."""
+    if backbone == "esmc":
+        return {"trust_remote_code": True, "attn_implementation": "sdpa"}
+    return {}
+
+
 from transformers import AutoTokenizer
 from sklearn.metrics import average_precision_score
 
@@ -78,6 +88,8 @@ def evaluate(model, loader, device):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--esm", required=True)
+    ap.add_argument("--backbone", choices=["esm2", "esmc"], default="esm2",
+                    help="sequence backbone; esmc adds the ESM-C load options")
     ap.add_argument("--out", default="phase3/runs/mm_v1")
     ap.add_argument("--max_length", type=int, default=512)
     ap.add_argument("--batch", type=int, default=2)
@@ -103,10 +115,12 @@ def main():
                      + (["structure"] if use_struct else [])
                      + (["evolution"] if use_msa else []))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"device: {device}   seed: {args.seed}   views: {views}   fusion: {args.fusion}", flush=True)
+    print(f"device: {device}   backbone: {args.backbone}   seed: {args.seed}   views: {views}   fusion: {args.fusion}", flush=True)
 
-    tok = AutoTokenizer.from_pretrained(args.esm)
-    model = MultiModalPPI(make_esm_encoder(args.esm), d_model=256, fusion=args.fusion).to(device)
+    esm_kwargs = backbone_load_kwargs(args.backbone)
+    tok = AutoTokenizer.from_pretrained(args.esm, **esm_kwargs)
+    model = MultiModalPPI(make_esm_encoder(args.esm, esm_kwargs=esm_kwargs),
+                          d_model=256, fusion=args.fusion).to(device)
 
     train_ds = PPBComplexData("train", tok, max_length=args.max_length,
                               use_msa=use_msa, use_struct=use_struct)
@@ -161,8 +175,8 @@ def main():
         print(f"TEST (best checkpoint) | views {views} | affinity RMSE {trmse:.3f} Pearson {tpear:.3f} | "
               f"interface AUPR {taupr:.3f}", flush=True)
         with open(os.path.join(args.out, "test_metrics.json"), "w") as f:
-            json.dump({"seed": args.seed, "views": views, "use_struct": use_struct, "use_msa": use_msa,
-                       "fusion": args.fusion,
+            json.dump({"seed": args.seed, "backbone": args.backbone, "views": views,
+                       "use_struct": use_struct, "use_msa": use_msa, "fusion": args.fusion,
                        "rmse": trmse, "pearson": tpear, "aupr": taupr}, f, indent=2)
 
 
