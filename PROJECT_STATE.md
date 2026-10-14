@@ -189,3 +189,21 @@ proteins it predicts: (1) whether they interact, (2) their binding affinity, (3)
   Scripts `phase5/interp_extract.sbatch` + `interp_extract.py` + `interp_plot.py`. Figures
   `reports/figures/phase5_interp_{2MCN,4KVG,1H0T}.png`. Next: Phase 6 (manuscript + public code
   release). Optional inference script. (K. Zaman)
+- 2026-10-14: Backbone consistency upgrade. The sequence backbone was fixed by a controlled
+  ablation: ESM-2 (650M) vs ESM-C (600M), trained and evaluated under identical settings on the
+  leakage-free Bernett interaction test set (52,048 pairs), with the evaluation extended to the
+  base-paper metric set (Precision, Recall, F1, ROC). ESM-C won the threshold-independent ranking
+  metrics (AUPR 0.719 vs 0.713, AUROC 0.724 vs 0.719) with fewer parameters; a tuning run raised
+  validation but not test and was recorded honestly as a null result, so the plain recipe is kept.
+  ESM-C was then carried into the multimodal model: the full affinity + interface model was
+  retrained with ESM-C (all three views, 3 seeds, same protocol as the ESM-2 run: 8 epochs, batch
+  2, lr 1e-5). Held-out test (3 seeds, mean +/- s.d.): affinity Pearson 0.441 +/- 0.009, RMSE
+  1.568 +/- 0.079, interface AUPR 0.298 +/- 0.011. Against the ESM-2 650M model
+  (0.439 / 1.575 / 0.281) the two are tied on affinity and ESM-C is modestly but consistently
+  better on interface detection (every ESM-C seed at or above the ESM-2 range). ESM-C is therefore
+  at least as strong as ESM-2 on every task and better on two (interaction and interface), with
+  fewer parameters, and is adopted as the single sequence backbone for the whole system. Code:
+  phase2 and phase3 --backbone switch + ESM-C alignment smoke test (phase3/smoke_esmc_mm.py), in a
+  dedicated esmc conda env (Python 3.11). Jobs: phase3/train_phase3_esmc_seeds.sbatch. Figures:
+  phase5/figures/backbone_comparison.*, reports/figures/phase3_backbone_test.*. Write-up:
+  phase5/BACKBONE_COMPARISON.md. (K. Zaman)
