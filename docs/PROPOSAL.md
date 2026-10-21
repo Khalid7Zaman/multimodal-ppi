@@ -1,7 +1,8 @@
 # A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal, **v10**. Mirrored into the repo (`docs/PROPOSAL.md`) from
-> `10. Research Proposal PPI v10.docx` so every session/tab can read it.
+> Research Proposal, **v12**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> `12. Research_Proposal_PPI_v12 (Start working on this project) .docx` so every session/tab can read it.
+> Model name: **TriWeave**. Sequence backbone: **ESM-C** (selected over ESM-2 by a controlled ablation).
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
 > `E:\Study\RAP-SUAT\Project and Meeting with PhD stds\Personal Projects\1. First Project\2. Protein-Protein-Interaction`
@@ -12,7 +13,7 @@ Protein-protein interactions organise almost everything a cell does, and disrupt
 route to new medicines. Predicting which proteins interact and how strongly they bind is therefore a
 central goal of computational biology. Sequence-only models have advanced the field but they miss the
 structural signal that governs binding, and the labelled data available to train them are limited. This
-proposal develops a multimodal deep-learning model for protein-protein interaction. From the sequences of
+proposal develops **TriWeave**, a multimodal deep-learning model for protein-protein interaction. From the sequences of
 two proteins it predicts whether they interact, how tightly they bind, and which residues form the
 interface. The model combines three views of each protein. A protein language model reads the sequence. A
 structural module draws on experimentally determined complex structures and measured binding affinities
