@@ -126,7 +126,7 @@ and complementarily within the group.
 
 ### 6.1 The proposed architecture
 
-Figure 1 tells the whole framework of the model in one view. Two protein sequences move through five
+Figure 1 tells the whole framework of the model, named **TriWeave**, in one view. Two protein sequences move through five
 stages: an input layer. A multimodal encoder that joins sequence, structural and evolutionary
 representations. A cross-attention reasoning engine that produces a residue-level interaction map. A
 multi-task head that predicts interaction, binding affinity and interface residues. And training on
@@ -236,9 +236,9 @@ matches the strength of the findings.
 
 ## 10. Positioning Against the Base Model
 
-**Table 2. The proposed framework set against PLM-interact** across input, data and prediction.
+**Table 2. TriWeave (the proposed framework) set against PLM-interact** across input, data and prediction.
 
-| Dimension | PLM-interact | Proposed framework |
+| Dimension | PLM-interact | TriWeave |
 |---|---|---|
 | Sequence representation | ESM-2 | ESM-C (selected over ESM-2) |
 | Structural information | None | Experimental complexes (PDBbind) |

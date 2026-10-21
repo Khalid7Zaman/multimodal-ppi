@@ -1,15 +1,17 @@
-# multimodal-ppi
+# TriWeave
 
-A multimodal deep-learning model for protein-protein interaction. From the sequences of two
-proteins, the model predicts three things at the same time: whether the two proteins interact,
+TriWeave is a multimodal deep-learning model for protein-protein interaction (the git repository
+is named `multimodal-ppi`). From the sequences of two
+proteins, TriWeave predicts three things at the same time: whether the two proteins interact,
 how strongly they bind (binding affinity), and which residues form the contact interface.
 
 Author: Khalid Zaman, Research Assistant Professor
 Supervisor: Prof. Zhaoxi Sun
 
-## What the model does
+## What TriWeave does
 
-The model combines three views of each protein. A protein language encoder (ESM-2) reads the
+TriWeave combines three views of each protein. A protein language encoder (ESM-C, selected over
+ESM-2 by a controlled ablation) reads the
 sequence. A structural module turns experimental complex structures into residue contact graphs.
 An evolutionary module measures conservation from multiple sequence alignments. A cross-attention
 layer then lets the two proteins read each other, and three task-specific heads produce the
@@ -18,17 +20,17 @@ data, so every result can be reproduced from public sources.
 
 ## Main results
 
-- Interaction: on the leakage-free Bernett benchmark (52,048 held-out pairs), the model reaches
-  AUROC 0.717 and AUPR 0.709. On the same test set the publicly released comparison model reaches
+- Interaction: on the leakage-free Bernett benchmark (52,048 held-out pairs), TriWeave reaches
+  AUROC 0.724 and AUPR 0.719. On the same test set the publicly released comparison model reaches
   0.622 and 0.636, and both of our figures are above the value of about 0.69 reported in the
   literature for this benchmark.
-- Affinity and interface: on 757 held-out complexes, repeated over three seeds, the model reaches
-  an affinity correlation (Pearson) of 0.439 (plus or minus 0.018) and an interface AUPR of 0.281
-  (plus or minus 0.006).
+- Affinity and interface: on 757 held-out complexes, repeated over three seeds, TriWeave reaches
+  an affinity correlation (Pearson) of 0.441 (plus or minus 0.009) and an interface AUPR of 0.298
+  (plus or minus 0.011).
 - The evolutionary view helps where its signal exists: on complexes with deep alignments the
   affinity correlation rises from 0.512 to 0.536.
 - The interface predictions are interpretable: when mapped back onto the three-dimensional
-  structures, the residues the model marks as interface sit on the real contact surfaces.
+  structures, the residues TriWeave marks as interface sit on the real contact surfaces.
 
 ## Repository layout
 

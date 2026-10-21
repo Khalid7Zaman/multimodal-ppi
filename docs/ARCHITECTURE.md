@@ -1,10 +1,10 @@
-# Architecture: multimodal-ppi
+# Architecture: TriWeave
 
-Design reference for the model. Expands Section 3 of `PROJECT_STATE.md` and Section 6 of
+Design reference for TriWeave. Expands Section 3 of `PROJECT_STATE.md` and Section 6 of
 `docs/PROPOSAL.md`, and records how each stage is actually implemented as the phases land.
 Last updated: 2026-09-17 (Phase 3 kickoff).
 
-The model takes **two protein sequences** and predicts **(1)** whether they interact,
+The model, named **TriWeave**, takes **two protein sequences** and predicts **(1)** whether they interact,
 **(2)** their binding affinity, and **(3)** their interface residues: with residue-level
 interpretability. Known structures are an *input*, never predicted (bound-structure
 prediction is the group's separate work).
@@ -43,11 +43,11 @@ checkpointing to fit the big encoder on the GPUs.
 ## Phase 2 baseline: `CrossAttnPPI` (implemented, `phase2/train_ppi.py`)
 ```
 seq A --+                                  +--> vA = pool(norm(hA + A->B attn))
-        +-- ESM-2 (shared, fine-tuned) --> proj --+                               --> [vA+vB, vA*vB, |vA-vB|] --> MLP --> interaction logit
+        +-- ESM-C (shared, fine-tuned) --> proj --+                               --> [vA+vB, vA*vB, |vA-vB|] --> MLP --> interaction logit
 seq B --+                                  +--> vB = pool(norm(hB + B->A attn))
 ```
 Symmetric pooling makes the score order-invariant. Loss BCEWithLogits, AdamW, bf16.
-Result (Bernett held-out, 52,048 pairs): 650M **AUROC 0.7174 / AUPR 0.7093** (> ~0.69 baseline).
+Result (Bernett held-out, 52,048 pairs): ESM-C **AUROC 0.724 / AUPR 0.719** (> ~0.69 baseline).
 
 ## Phase 3 plan: add structural + evolutionary modules (on PPB complexes)
 Structures and feasible MSAs exist for the ~6.5k **PPB-Affinity** complexes, not the 163k
