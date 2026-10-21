@@ -1,7 +1,7 @@
 # Phase 5: Benchmarking, Ablations, and Interpretability
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP) **Supervisor:** Prof. Zhaoxi Sun, SUAT
-**Project:** multimodal-ppi (Protein-Protein Interaction),   2026-10-09
+**Project:** multimodal-ppi (Protein-Protein Interaction). Model: TriWeave,   2026-10-09
 **Status:** COMPLETE: interaction benchmark, module ablation, stratified analysis, fusion study, and interpretability all done. Headline: the interaction model beats PLM-interact on the leakage-free benchmark. The multimodal views give limited aggregate benefit at 650M, but evolution helps consistently on deep-MSA complexes. A gated fusion does not beat the simple additive one. And the model's interface predictions are spatially coherent and interpretable. (Backbone: the interaction benchmark uses the selected ESM-C backbone; the multimodal design studies below are on the 650M model, and the backbone ablation found the two tied on those tasks.)
 
 ---

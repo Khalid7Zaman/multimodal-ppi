@@ -10,7 +10,7 @@ on Gitee, on GitHub, and on the cluster. Last updated: 2026-10-10.
 `PHASE2_SUMMARY.md`, `PHASE3_SUMMARY.md` (phase write-ups).
 
 ## 1. Project summary
-A multimodal deep-learning model for protein-protein interaction. From the sequences of two
+The model is named **TriWeave**. TriWeave is a multimodal deep-learning model for protein-protein interaction. From the sequences of two
 proteins it predicts: (1) whether they interact, (2) their binding affinity, (3) the interface residues.
 
 ## 2. Confirmed scope (with Prof. Zhaoxi Sun)

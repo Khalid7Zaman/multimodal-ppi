@@ -1,7 +1,7 @@
 # Phase 3: Structural and Evolutionary Modules (Multimodal, Multi-Task Model)
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP) **Supervisor:** Prof. Zhaoxi Sun, SUAT
-**Project:** multimodal-ppi (Protein-Protein Interaction),   2026-10-04
+**Project:** multimodal-ppi (Protein-Protein Interaction). Model: TriWeave,   2026-10-04
 **Status:** COMPLETE: structural and evolutionary modules built. Multiple sequence alignments generated for all 9,516 proteins. The multimodal multi-task model trained and evaluated at two encoder sizes, then confirmed on the held-out test set over three seeds with error bars. Adding evolution and scaling to the 650M encoder improves every task.
 
 ---

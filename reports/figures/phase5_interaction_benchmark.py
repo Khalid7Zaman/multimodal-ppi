@@ -13,7 +13,7 @@ plt.rcParams.update({"font.family": "serif",
                      "font.serif": ["Liberation Serif", "Times New Roman", "DejaVu Serif"],
                      "font.size": 12, "axes.linewidth": 0.9, "axes.edgecolor": "#444444"})
 
-models = ["This work\n(ESM-C 600M)", "PLM-interact\n(650M)"]
+models = ["TriWeave\n(ESM-C 600M)", "PLM-interact\n(650M)"]
 colors = ["#2b6cb0", "#9aa5b1"]
 # This work = selected ESM-C interaction model on the Bernett test set (AUROC 0.724 / AUPR 0.719);
 # PLM-interact-650M as released (AUROC 0.622 / AUPR 0.636).

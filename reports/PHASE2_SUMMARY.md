@@ -1,7 +1,7 @@
 # Phase 2: Core Interaction Model (ESM-2 + Cross-Attention)
 
 **Author:** Khalid Zaman, Research Assistant Professor (RAP) **Supervisor:** Prof. Zhaoxi Sun, SUAT
-**Project:** multimodal-ppi (Protein-Protein Interaction)
+**Project:** multimodal-ppi (Protein-Protein Interaction). Model: TriWeave
 **Status:** COMPLETE: both the 35M and 650M models trained and evaluated on the held-out test set.
 
 ---
