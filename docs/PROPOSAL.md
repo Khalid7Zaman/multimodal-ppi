@@ -1,8 +1,13 @@
 # A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal, **v12**. Mirrored into the repo (`docs/PROPOSAL.md`) from
-> `12. Research_Proposal_PPI_v12 (Start working on this project) .docx` so every session/tab can read it.
+> Research Proposal, **v14**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> `14. Research_Proposal_PPI_v14 (Start working on this project) .docx` so every session/tab can read it.
 > Model name: **TriWeave**. Sequence backbone: **ESM-C** (selected over ESM-2 by a controlled ablation).
+> v13 folded in the supervisor's data and training direction: frozen pretrained foundations with a
+> trainable fitting network, synthetic data augmentation (simulation and distillation with guided pair
+> selection), two training regimes to compare, and multi-task machinery. **v14** replaces Figure 1 with
+> the unified main-architecture graphic (Part A: the model; Part B: how it is fed and trained) and reframes
+> Section 6.1 to match. The data and training strategy is set out in full in `docs/ROADMAP.md`.
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
 > `E:\Study\RAP-SUAT\Project and Meeting with PhD stds\Personal Projects\1. First Project\2. Protein-Protein-Interaction`
@@ -22,7 +27,9 @@ cross-attention layer then reasons across the pair and exposes the contacts it r
 and the interface it identifies are the drug-relevant outputs, since together they show whether an
 interaction is a viable target and where to act on it. The model is benchmarked against leading
 sequence-based predictors, and it stays complementary to the separate and harder task of predicting a full
-bound complex, which the group already studies.
+bound complex, which the group already studies. To use the limited experimental data well, the
+framework builds on pretrained representations kept frozen and augments the scarce measurements with
+cheaper simulated and distilled training signals, as set out in the methodology.
 
 ## 1. Introduction and Background
 
@@ -127,11 +134,17 @@ and complementarily within the group.
 
 ### 6.1 The proposed architecture
 
-Figure 1 tells the whole framework of the model, named **TriWeave**, in one view. Two protein sequences move through five
-stages: an input layer. A multimodal encoder that joins sequence, structural and evolutionary
-representations. A cross-attention reasoning engine that produces a residue-level interaction map. A
-multi-task head that predicts interaction, binding affinity and interface residues. And training on
-experimentally grounded data from PDBbind and public interaction datasets.
+Figure 1 shows the whole framework of the model, named **TriWeave**, in two parts. Part A is what the
+model is made of, and Part B is how it is fed and trained. In Part A, two proteins are read by
+representation foundations that are pretrained once and then kept frozen, giving three views of each
+protein: the sequence through a protein language model, the structure as a residue contact graph from an
+experimental or predicted structure, and the evolution through a multiple sequence alignment. A two-way
+cross-attention fusion then lets the two proteins read each other, a trainable fitting network with
+multi-task experts carries the shared representation, and the heads predict interaction, binding affinity
+and interface residues. In Part B, the scarce experimental data is enlarged with inexpensive synthetic
+data and the model is trained and compared under two regimes, as set out in Section 6.2 and Section 6.3.
+The small-molecule side and the protein-ligand head shown in the figure are the later drug-screening
+extension. The paragraphs below walk through Part A in order.
 
 It begins at the simplest possible starting point. The sequences of two proteins arrive and nothing else is
 required. A single shared encoder reads both, so Protein A and Protein B are treated the same way.
@@ -160,18 +173,45 @@ taking interaction labels from public datasets and structures with measured affi
 The project draws on three public sources. Interaction labels come from established protein-protein
 interaction datasets, including the sets released with PLM-interact and the leakage-free benchmark used to
 test it fairly [6]. Complex structures and measured binding affinities come from PDBbind [8]. Evolutionary
-information comes from multiple sequence alignments. Using experimental structures and affinities keeps the
-training signal trustworthy and removes any dependence on predicted structures.
+information comes from multiple sequence alignments. Experimental structures and affinities keep the
+training signal trustworthy and remain the ground truth, and where an experimental structure is not
+available an AlphaFold-predicted structure can stand in so that coverage is not limited to solved complexes.
+
+Experimental interaction data is scarce, so before the model meets the experimental ground truth the
+training set is enlarged in two inexpensive and complementary ways. Physical simulation, through MM/GBSA or
+docking scoring, produces approximate binding affinities for many protein pairs [9], and strong existing
+interaction predictors are distilled by taking their predictions as extra labels. Both sources are guided
+by a reported-interaction database, such as STRING, BioGRID or HuRI [15], so that the generated pairs are
+plausible rather than random, since most protein pairs do not interact. These generated labels are cheap
+and abundant, while the experimental measurements remain the ground truth for fine-tuning and for
+evaluation.
 
 ### 6.3 Model and training
 
-The sequence module fine-tunes a protein language model backbone on paired sequences [3,6]. Two candidate backbones, ESM-2 (650M) and ESM-C (600M), were compared under identical settings on the leakage-free benchmark, and ESM-C was selected because it gave the stronger ranking performance with fewer parameters. The structural module encodes
+The three modules are built on pretrained foundation models that are used as frozen feature extractors, so
+their general knowledge is kept and only a smaller fitting network is trained on top. Whether the sequence
+backbone is better kept frozen or fine-tuned end to end is treated as an experimental question on this
+task, since an earlier comparison on the small interaction data favoured fine-tuning. The sequence module
+itself is built on a protein language model backbone applied to paired sequences [3,6]. Two candidate backbones, ESM-2 (650M) and ESM-C (600M), were compared under identical settings on the leakage-free benchmark, and ESM-C was selected because it gave the stronger ranking performance with fewer parameters. The structural module encodes
 each complex from PDBbind as a residue contact graph and processes it with a graph network. The
 evolutionary module encodes conservation from alignments. These three views are joined and passed to the
 cross-attention module, and the shared output feeds the interaction, affinity and interface heads under one
 combined objective. Training is supervised throughout, using interaction labels and the measured affinities
 in PDBbind. Mixed precision and gradient checkpointing keep the full-size model within the memory of the
 available GPUs.
+
+How this extra data is best used is left open and settled by experiment rather than assumed. In a two-stage
+regime the fitting network is first preheated on the simulated and distilled data and then fine-tuned on
+the experimental data. In an alternative regime the simulated and distilled data are added as auxiliary
+objectives and trained jointly with the experimental data. It is not taken for granted that one regime
+beats the other, so both are built and compared on the same held-out experimental test set.
+
+Because the model carries several tasks of very different sizes, the tasks can pull against one another
+during training. Two families of methods address this and can be combined. Mixture-of-experts heads, such
+as the multi-gate design [16] and its hierarchical and feature-decomposition variants [17], give the tasks
+partly separate capacity, while gradient-projection methods [18] remove the conflicting part of one task's
+gradient so that the tasks stop cancelling. The choice between these methods is one of the open questions
+the project will test.
 
 ### 6.4 Evaluation
 
@@ -267,3 +307,7 @@ matches the strength of the findings.
 12. Humphreys, I. R. et al. Computed structures of core eukaryotic protein complexes. *Science* 374, eabm4805 (2021).
 13. Vassilev, L. T. et al. In vivo activation of the p53 pathway by small-molecule antagonists of MDM2. *Science* 303, 844-848 (2004).
 14. Stukalov, A. et al. Multilevel proteomics reveals host perturbations by SARS-CoV-2 and SARS-CoV. *Nature* 594, 246-252 (2021).
+15. Szklarczyk, D. et al. The STRING database of protein-protein association networks and functional enrichment analyses. *Nucleic Acids Research* (2023).
+16. Ma, J. et al. Modeling task relationships in multi-task learning with multi-gate mixture-of-experts. *KDD* 2018.
+17. Wang, X. et al. HoME: Hierarchy of Multi-gate Experts for Multi-Task Learning at Kuaishou. *KDD* 2025.
+18. Yu, T. et al. Gradient surgery for multi-task learning. *NeurIPS* 2020.
