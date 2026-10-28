@@ -1,13 +1,14 @@
 # A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal, **v14**. Mirrored into the repo (`docs/PROPOSAL.md`) from
-> `14. Research_Proposal_PPI_v14 (Start working on this project) .docx` so every session/tab can read it.
+> Research Proposal, **v15**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> `15. Research_Proposal_PPI_v15 (Start working on this project) .docx` so every session/tab can read it.
 > Model name: **TriWeave**. Sequence backbone: **ESM-C** (selected over ESM-2 by a controlled ablation).
 > v13 folded in the supervisor's data and training direction: frozen pretrained foundations with a
 > trainable fitting network, synthetic data augmentation (simulation and distillation with guided pair
-> selection), two training regimes to compare, and multi-task machinery. **v14** replaces Figure 1 with
-> the unified main-architecture graphic (Part A: the model; Part B: how it is fed and trained) and reframes
-> Section 6.1 to match. The data and training strategy is set out in full in `docs/ROADMAP.md`.
+> selection), two training regimes to compare, and multi-task machinery. v14 made the main-architecture
+> graphic Figure 1 (Part A: the model; Part B: how it is fed and trained). **v15** corrects that figure to
+> be protein-only, matching the supervisor's representation (ESM-C, structure, MSA); the small-molecule
+> and screening direction stays as the deferred vision. The data and training strategy is in `docs/ROADMAP.md`.
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
 > `E:\Study\RAP-SUAT\Project and Meeting with PhD stds\Personal Projects\1. First Project\2. Protein-Protein-Interaction`
@@ -143,8 +144,8 @@ cross-attention fusion then lets the two proteins read each other, a trainable f
 multi-task experts carries the shared representation, and the heads predict interaction, binding affinity
 and interface residues. In Part B, the scarce experimental data is enlarged with inexpensive synthetic
 data and the model is trained and compared under two regimes, as set out in Section 6.2 and Section 6.3.
-The small-molecule side and the protein-ligand head shown in the figure are the later drug-screening
-extension. The paragraphs below walk through Part A in order.
+The model is protein-only, matching the supervisor's representation. The paragraphs below walk through
+Part A in order.
 
 It begins at the simplest possible starting point. The sequences of two proteins arrive and nothing else is
 required. A single shared encoder reads both, so Protein A and Protein B are treated the same way.

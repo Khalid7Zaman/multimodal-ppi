@@ -33,8 +33,9 @@ structure), and the evolutionary features (from a multiple sequence alignment). 
 feed a smaller trainable fitting network that carries the prediction heads. Freezing the foundations
 keeps their general knowledge intact, avoids overfitting the large models to small datasets, and makes
 the system modular, so later training stages slot into the fitting network without touching the
-foundations. The small-molecule side and the protein-ligand head are the later drug-screening
-extension, drawn lightly.
+foundations. The model is protein-only, matching the supervisor's representation (ESM-C, structure,
+and MSA); the small-molecule and protein-ligand screening direction is kept separate as the deferred
+vision in Section 4.
 
 Part B is the data and training strategy, set out in full in Section 3. It is the step the supervisor
 asked to add inside the main architecture, so that one figure shows not only the model but also how the

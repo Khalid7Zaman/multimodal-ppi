@@ -104,6 +104,8 @@ def main():
     ap.add_argument("--no_evo", action="store_true", help="ablation: disable the evolution view")
     ap.add_argument("--fusion", default="additive", choices=["additive", "gated"],
                     help="how the three views are combined (default additive; 'gated' = learned per-residue gates)")
+    ap.add_argument("--freeze_backbone", action="store_true",
+                    help="freeze the sequence backbone (ESM); train only the fitting network on top")
     ap.add_argument("--log_every", type=int, default=50)
     args = ap.parse_args()
 
@@ -115,12 +117,25 @@ def main():
                      + (["structure"] if use_struct else [])
                      + (["evolution"] if use_msa else []))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"device: {device}   backbone: {args.backbone}   seed: {args.seed}   views: {views}   fusion: {args.fusion}", flush=True)
+    print(f"device: {device}   backbone: {args.backbone}   seed: {args.seed}   views: {views}   "
+          f"fusion: {args.fusion}   frozen: {args.freeze_backbone}", flush=True)
 
     esm_kwargs = backbone_load_kwargs(args.backbone)
     tok = AutoTokenizer.from_pretrained(args.esm, **esm_kwargs)
     model = MultiModalPPI(make_esm_encoder(args.esm, esm_kwargs=esm_kwargs),
                           d_model=256, fusion=args.fusion).to(device)
+
+    if args.freeze_backbone:
+        # Phase B: use the pretrained backbone as a fixed feature extractor. Freeze its weights
+        # and keep it in eval mode, so only the fitting network (projection, structure, evolution,
+        # cross-attention and the heads) is trained. Autograd does not build the backbone subgraph
+        # when none of its parameters require grad, so this is also much lighter on memory.
+        for p in model.seq.parameters():
+            p.requires_grad = False
+        model.seq.eval()
+        n_tr = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        n_all = sum(p.numel() for p in model.parameters())
+        print(f"backbone FROZEN: training {n_tr:,} / {n_all:,} params ({100*n_tr/n_all:.1f}%)", flush=True)
 
     train_ds = PPBComplexData("train", tok, max_length=args.max_length,
                               use_msa=use_msa, use_struct=use_struct)
@@ -134,11 +149,14 @@ def main():
                                            use_msa=use_msa, use_struct=use_struct),
                             batch_size=args.batch, shuffle=False, collate_fn=collate, num_workers=2)
 
-    opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
+    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr)
     mse = nn.MSELoss()
     best = -1.0
     for epoch in range(1, args.epochs + 1):
-        model.train(); t0 = time.time(); tot = 0.0; n = 0; step = 0
+        model.train()
+        if args.freeze_backbone:
+            model.seq.eval()   # keep the frozen backbone deterministic (no dropout on its features)
+        t0 = time.time(); tot = 0.0; n = 0; step = 0
         for b in train_dl:
             b = move(b, device)
             opt.zero_grad()
@@ -177,6 +195,7 @@ def main():
         with open(os.path.join(args.out, "test_metrics.json"), "w") as f:
             json.dump({"seed": args.seed, "backbone": args.backbone, "views": views,
                        "use_struct": use_struct, "use_msa": use_msa, "fusion": args.fusion,
+                       "freeze_backbone": args.freeze_backbone,
                        "rmse": trmse, "pearson": tpear, "aupr": taupr}, f, indent=2)
 
 
