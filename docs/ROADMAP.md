@@ -99,13 +99,14 @@ work.
 ## 5. Phased roadmap
 
 - **Phase A (complete).** TriWeave protein model. Interaction, affinity, and interface, on ESM-C.
-- **Phase B (freeze test done; capacity follow-up running).** Frozen representation foundations and
-  AlphaFold-predicted structures for coverage. The freeze-versus-fine-tune experiment is done: with the
-  ESM-C backbone frozen and only the 1.35M-parameter fitting network trained, the model ties the
-  fine-tuned model on interface (AUPR 0.300 vs 0.298) and trails it modestly on affinity (Pearson 0.408
-  vs 0.441), training 0.2% of the parameters on a small GPU. Freezing is adopted, as the staged design
-  requires; the small affinity gap is a target for fitting-network capacity (a wider-network follow-up is
-  running) and for the preheating stage. See `reports/PHASE_B_FREEZE_VS_FINETUNE.md`.
+- **Phase B (DONE; decision: adopt freezing).** Frozen representation foundations and AlphaFold-predicted
+  structures for coverage. The freeze-versus-fine-tune experiment is complete. With the ESM-C backbone
+  frozen, the model ties the fine-tuned model on interface, and with a wider fitting network (width 512,
+  0.8% of the parameters) also matches it on affinity RMSE (1.574 vs 1.568); it trails only slightly on
+  affinity ranking (Pearson 0.411 vs 0.441). More head capacity did not close the ranking gap, so that gap
+  is representation-level and is carried to the preheating stage rather than fixed by un-freezing. Freezing
+  is adopted, as the staged design requires (to confirm with the supervisor). See
+  `reports/PHASE_B_FREEZE_VS_FINETUNE.md`.
 - **Phase C.** The data engine. Consolidate the experimental database, choose the interaction database
   that guides pair selection, and generate synthetic labels from simulation (MM/GBSA or docking) and
   from distillation of strong PPI models.
@@ -117,9 +118,10 @@ work.
 
 ## 6. Open decisions
 
-- Freeze or fine-tune the backbone (Phase B). Resolved in favour of freezing (small affinity cost, tied
-  interface); a wider-fitting-network follow-up is testing whether the affinity gap closes, and the
-  decision is to be confirmed with the supervisor.
+- Freeze or fine-tune the backbone (Phase B). Resolved in favour of freezing. Frozen matches fine-tuned on
+  interface and on affinity RMSE, and trails only slightly on affinity ranking (a representation-level gap
+  of about 0.03 Pearson that more head capacity did not close, left to the preheating stage). To confirm
+  with the supervisor.
 - Two-stage pretraining versus auxiliary tasks (Phase D), to be decided by experiment.
 - Data choices: which experimental databases to consolidate, which interaction database guides pair
   selection, which state-of-the-art models to distil from, and whether MM/GBSA or docking (or both)
