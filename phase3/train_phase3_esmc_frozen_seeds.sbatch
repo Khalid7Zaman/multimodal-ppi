@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=mmCf_seeds
-#SBATCH --partition=gpu_6000D,gpu_5090
+#SBATCH --partition=gpu_3080ti,gpu_5080,gpu_5070ti,gpu_5090,gpu_6000D
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=96G
-#SBATCH --time=2-00:00:00
+#SBATCH --mem=48G
+#SBATCH --time=12:00:00
 #SBATCH --array=0-2
 #SBATCH --output=phase3/logs/mmCf_seed%a_%A.out
 
@@ -14,10 +14,14 @@
 # Everything else matches the fine-tuned runs (ESM-C, all three views, 8 epochs, batch 2, 3 seeds,
 # same held-out TEST scoring) so the only difference is freeze vs fine-tune.
 #
-# Learning rate: 1e-4 here, ten times the fine-tuned 1e-5. The low 1e-5 exists to protect the
-# pretrained backbone weights during fine-tuning; with the backbone frozen, only the randomly
-# initialised fitting network trains, and it learns better at a higher rate. This gives the frozen
-# model a fair chance rather than handicapping it with a rate chosen for a different purpose.
+# A frozen run keeps no backbone gradients or optimizer state, so it needs only a few GB of GPU memory
+# and finishes in a few hours. It therefore runs well on the smaller, more-available cards (3080 Ti),
+# which is why the partition list is broad and the memory and walltime are modest. The large training
+# cards (gpu_6000D / gpu_5090) stay in the list as a fallback.
+#
+# Learning rate: 1e-4, ten times the fine-tuned 1e-5. The low 1e-5 exists to protect the pretrained
+# backbone weights during fine-tuning; with the backbone frozen, only the randomly initialised fitting
+# network trains, and it learns better at a higher rate.
 eval "$(conda shell.bash hook)"; conda activate esmc
 cd "$HOME/Projects/multimodal-ppi"
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1

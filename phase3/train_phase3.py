@@ -106,6 +106,10 @@ def main():
                     help="how the three views are combined (default additive; 'gated' = learned per-residue gates)")
     ap.add_argument("--freeze_backbone", action="store_true",
                     help="freeze the sequence backbone (ESM); train only the fitting network on top")
+    ap.add_argument("--d_model", type=int, default=256,
+                    help="fitting-network width (capacity knob; must be divisible by the 8 attention heads)")
+    ap.add_argument("--struct_layers", type=int, default=2,
+                    help="number of structure-encoder layers (capacity knob)")
     ap.add_argument("--log_every", type=int, default=50)
     args = ap.parse_args()
 
@@ -123,7 +127,8 @@ def main():
     esm_kwargs = backbone_load_kwargs(args.backbone)
     tok = AutoTokenizer.from_pretrained(args.esm, **esm_kwargs)
     model = MultiModalPPI(make_esm_encoder(args.esm, esm_kwargs=esm_kwargs),
-                          d_model=256, fusion=args.fusion).to(device)
+                          d_model=args.d_model, struct_layers=args.struct_layers,
+                          fusion=args.fusion).to(device)
 
     if args.freeze_backbone:
         # Phase B: use the pretrained backbone as a fixed feature extractor. Freeze its weights
@@ -195,7 +200,8 @@ def main():
         with open(os.path.join(args.out, "test_metrics.json"), "w") as f:
             json.dump({"seed": args.seed, "backbone": args.backbone, "views": views,
                        "use_struct": use_struct, "use_msa": use_msa, "fusion": args.fusion,
-                       "freeze_backbone": args.freeze_backbone,
+                       "freeze_backbone": args.freeze_backbone, "d_model": args.d_model,
+                       "struct_layers": args.struct_layers,
                        "rmse": trmse, "pearson": tpear, "aupr": taupr}, f, indent=2)
 
 
