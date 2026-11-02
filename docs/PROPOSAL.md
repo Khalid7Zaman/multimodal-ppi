@@ -1,7 +1,7 @@
 # A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal, **v16**. Mirrored into the repo (`docs/PROPOSAL.md`) from
-> `16. Research_Proposal_PPI_v16 (Start working on this project) .docx` so every session/tab can read it.
+> Research Proposal, **v17**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> `17. Research_Proposal_PPI_v17 (Start working on this project) .docx` so every session/tab can read it.
 > Model name: **TriWeave**. Sequence backbone: **ESM-C** (selected over ESM-2 by a controlled ablation).
 > v13 folded in the supervisor's data and training direction: frozen pretrained foundations with a
 > trainable fitting network, synthetic data augmentation (simulation and distillation with guided pair
@@ -9,7 +9,9 @@
 > graphic Figure 1 (Part A: the model; Part B: how it is fed and trained). **v15** corrects that figure to
 > be protein-only, matching the supervisor's representation (ESM-C, structure, MSA); the small-molecule
 > and screening direction stays as the deferred vision. **v16** completes the STRING reference and notes the
-> Phase B freeze-versus-fine-tune result in Section 6.3. The data and training strategy is in `docs/ROADMAP.md`.
+> Phase B freeze-versus-fine-tune result in Section 6.3. **v17** adds Section 6.6 and Table 3, the staged
+> A-to-F roadmap (so the implementation plan now carries Phase B, Phase C and the rest, not only phases 0-6).
+> The data and training strategy is in `docs/ROADMAP.md`.
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
 > `E:\Study\RAP-SUAT\Project and Meeting with PhD stds\Personal Projects\1. First Project\2. Protein-Protein-Interaction`
@@ -242,6 +244,24 @@ throughout. It moves in phases (Table 1), and each phase ends in a working resul
 | 4 | Affinity and interface heads | Binding-affinity and interface-residue predictions |
 | 5 | Benchmarking and analysis | Full comparison, ablations and interpretability study |
 | 6 | Dissemination | Manuscript and public code release |
+
+### 6.6 Extended roadmap following supervisor review
+
+The phases in Table 1 built and validated the protein-protein interaction model, the proof of concept.
+Following a review with the supervisor, the project now follows a staged, frozen-foundation plan that puts
+the data and training strategy of this section into a clear order. Table 3 sets out these phases. Phases A
+and B are complete, and Phase C, the data engine, is the immediate next step.
+
+**Table 3. Staged roadmap following the supervisor review.** Phases A and B are complete; Phase C is next.
+
+| Phase | Goal | Status |
+|---|---|---|
+| A | TriWeave protein model: interaction, binding affinity and interface residues, on the frozen ESM-C backbone. | Complete |
+| B | Freeze the representation foundations (the freeze-versus-fine-tune question, settled in favour of freezing) and allow AlphaFold-predicted structures for coverage. | Complete (freezing adopted) |
+| C | Data engine: consolidate the experimental database, choose the interaction database that guides pair selection, and generate synthetic labels from physical simulation (MM/GBSA or docking) and from distillation of strong models. | Next |
+| D | Staged training: preheat the fitting network on the synthetic and distilled data, then fine-tune on experimental data, and compare this against the auxiliary-task regime. | Planned |
+| E | Multi-task machinery: mixture-of-experts (MMoE, HoME, FDN) and gradient projection (PCGrad) to reduce conflict between the tasks. | Planned |
+| F | Protein-ligand binding and virtual screening, using the same frozen-foundation design. | Later extension |
 
 ## 7. Novelty and Contributions
 
