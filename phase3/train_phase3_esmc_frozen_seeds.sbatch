@@ -12,7 +12,8 @@
 # The pretrained ESM-C backbone is used as a fixed feature extractor (--freeze_backbone); only the
 # fitting network (projection, structure, evolution, cross-attention and the three heads) is trained.
 # Everything else matches the fine-tuned runs (ESM-C, all three views, 8 epochs, batch 2, 3 seeds,
-# same held-out TEST scoring) so the only difference is freeze vs fine-tune.
+# same held-out TEST scoring). The frozen and fine-tuned runs differ in the freezing AND in the learning
+# rate (1e-4 here vs the fine-tuned 1e-5, each chosen to suit its regime), not in freezing alone.
 #
 # A frozen run keeps no backbone gradients or optimizer state, so it needs only a few GB of GPU memory
 # and finishes in a few hours. It therefore runs well on the smaller, more-available cards (3080 Ti),

@@ -10,12 +10,16 @@ fixed representation. The earlier ESM-C multimodal model, by contrast, fine-tune
 B measures, on our own task and data, what freezing actually costs.
 
 ## Setup
-Every model here is identical except for the backbone and the fitting-network width. Same data (PPB-Affinity
-complexes, all three views), same eight epochs, same batch size of two, same three seeds, and the same
-held-out test scoring. The frozen models keep the 576M-parameter ESM-C backbone fixed and train only the
-fitting network, at a learning rate of 1e-4. The fine-tuned model trains the whole backbone at 1e-5. Two
-frozen widths were run: the baseline fitting network at d_model 256 (1.35M trainable) and a wider follow-up
-at d_model 512 (4.8M trainable), to test whether a small affinity gap was just head under-capacity. Frozen
+The runs share the same data (PPB-Affinity complexes, all three views), the same eight epochs, batch size of
+two, three seeds, and the same held-out test scoring. The frozen runs keep the 576M-parameter ESM-C backbone
+fixed and train only the fitting network, while the fine-tuned run trains the whole backbone. The frozen runs
+also use a higher learning rate, 1e-4 against the fine-tuned 1e-5, because a from-scratch fitting network
+learns better at a higher rate while the low rate protects the pretrained backbone during fine-tuning. So the
+frozen and fine-tuned runs differ in two deliberate ways, the freezing and the learning rate, each rate chosen
+to suit its regime. The fine-tuned learning rate was not re-tuned, so this is a comparison of two sensibly
+configured setups rather than a strict single-variable ablation. Two frozen widths were run, the baseline
+fitting network at d_model 256 (1.35M trainable) and a wider follow-up at d_model 512 (4.8M trainable), to
+test whether a small affinity gap was just head under-capacity; those two differ only in width. Frozen
 runs used 3080 Ti and RTX 6000D cards, the fine-tuned runs the large training cards. The card does not
 affect the comparison beyond the seed-level noise already reported.
 
