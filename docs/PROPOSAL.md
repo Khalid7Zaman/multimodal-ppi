@@ -1,14 +1,15 @@
 # A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal, **v15**. Mirrored into the repo (`docs/PROPOSAL.md`) from
-> `15. Research_Proposal_PPI_v15 (Start working on this project) .docx` so every session/tab can read it.
+> Research Proposal, **v16**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> `16. Research_Proposal_PPI_v16 (Start working on this project) .docx` so every session/tab can read it.
 > Model name: **TriWeave**. Sequence backbone: **ESM-C** (selected over ESM-2 by a controlled ablation).
 > v13 folded in the supervisor's data and training direction: frozen pretrained foundations with a
 > trainable fitting network, synthetic data augmentation (simulation and distillation with guided pair
 > selection), two training regimes to compare, and multi-task machinery. v14 made the main-architecture
 > graphic Figure 1 (Part A: the model; Part B: how it is fed and trained). **v15** corrects that figure to
 > be protein-only, matching the supervisor's representation (ESM-C, structure, MSA); the small-molecule
-> and screening direction stays as the deferred vision. The data and training strategy is in `docs/ROADMAP.md`.
+> and screening direction stays as the deferred vision. **v16** completes the STRING reference and notes the
+> Phase B freeze-versus-fine-tune result in Section 6.3. The data and training strategy is in `docs/ROADMAP.md`.
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
 > `E:\Study\RAP-SUAT\Project and Meeting with PhD stds\Personal Projects\1. First Project\2. Protein-Protein-Interaction`
@@ -192,8 +193,11 @@ evaluation.
 The three modules are built on pretrained foundation models that are used as frozen feature extractors, so
 their general knowledge is kept and only a smaller fitting network is trained on top. Whether the sequence
 backbone is better kept frozen or fine-tuned end to end is treated as an experimental question on this
-task, since an earlier comparison on the small interaction data favoured fine-tuning. The sequence module
-itself is built on a protein language model backbone applied to paired sequences [3,6]. Two candidate backbones, ESM-2 (650M) and ESM-C (600M), were compared under identical settings on the leakage-free benchmark, and ESM-C was selected because it gave the stronger ranking performance with fewer parameters. The structural module encodes
+task, since an earlier comparison on the small interaction data favoured fine-tuning. A dedicated experiment
+has since tested this directly, and with the backbone frozen the model matches the fine-tuned model on
+interface and on affinity error and trails it only slightly on affinity ranking, so freezing is adopted for
+the staged design. The sequence module itself is built on a protein language model backbone applied to paired
+sequences [3,6]. Two candidate backbones, ESM-2 (650M) and ESM-C (600M), were compared under identical settings on the leakage-free benchmark, and ESM-C was selected because it gave the stronger ranking performance with fewer parameters. The structural module encodes
 each complex from PDBbind as a residue contact graph and processes it with a graph network. The
 evolutionary module encodes conservation from alignments. These three views are joined and passed to the
 cross-attention module, and the shared output feeds the interaction, affinity and interface heads under one
@@ -308,7 +312,7 @@ matches the strength of the findings.
 12. Humphreys, I. R. et al. Computed structures of core eukaryotic protein complexes. *Science* 374, eabm4805 (2021).
 13. Vassilev, L. T. et al. In vivo activation of the p53 pathway by small-molecule antagonists of MDM2. *Science* 303, 844-848 (2004).
 14. Stukalov, A. et al. Multilevel proteomics reveals host perturbations by SARS-CoV-2 and SARS-CoV. *Nature* 594, 246-252 (2021).
-15. Szklarczyk, D. et al. The STRING database of protein-protein association networks and functional enrichment analyses. *Nucleic Acids Research* (2023).
+15. Szklarczyk, D. et al. The STRING database in 2023: protein-protein association networks and functional enrichment analyses for any sequenced genome of interest. *Nucleic Acids Research* 51, D638-D646 (2023).
 16. Ma, J. et al. Modeling task relationships in multi-task learning with multi-gate mixture-of-experts. *KDD* 2018.
 17. Wang, X. et al. HoME: Hierarchy of Multi-gate Experts for Multi-Task Learning at Kuaishou. *KDD* 2025.
 18. Yu, T. et al. Gradient surgery for multi-task learning. *NeurIPS* 2020.

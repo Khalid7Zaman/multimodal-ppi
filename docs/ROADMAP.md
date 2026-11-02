@@ -131,9 +131,9 @@ work.
 ## References
 
 1. Wang, X. et al. HoME: Hierarchy of Multi-gate Experts for Multi-Task Learning at Kuaishou. KDD 2025.
-2. Feature Decomposition for Reducing Negative Transfer: A Novel Multi-task Learning Method for Recommender System.
+2. Zhou et al. Feature decomposition for reducing negative transfer: a novel multi-task learning method for recommender systems (FDN). AAAI 2023. arXiv:2302.05031.
 3. Yu, T. et al. Gradient Surgery for Multi-Task Learning (PCGrad). NeurIPS 2020.
-4. Szklarczyk, D. et al. The STRING database. Nucleic Acids Research (reported protein-protein interactions).
+4. Szklarczyk, D. et al. The STRING database in 2023: protein-protein association networks and functional enrichment analyses for any sequenced genome of interest. Nucleic Acids Research 51, D638-D646 (2023).
 5. Zhang, Z. et al. Fitness aligned structural modeling enables scalable virtual screening with AuroBind. arXiv:2508.02137 (2025).
 6. Liu, D. et al. PLM-interact: extending protein language models to predict protein-protein interactions. Nat. Commun. 16, 9012 (2025).
 7. Bernett, J., Blumenthal, D. & List, M. Briefings in Bioinformatics 25, bbae076 (2024).
