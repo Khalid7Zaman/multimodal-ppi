@@ -26,7 +26,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="test", choices=["train", "val", "test"])
     args = ap.parse_args()
-    df = pd.read_csv(os.path.join(PPB, f"ppb_{args.split}_iface.csv"))
+    # The iface_query / iface_text columns are long digit-only strings; newer pandas infers them
+    # as integers and overflows. Read them as text, exactly as the data loader does.
+    path = os.path.join(PPB, f"ppb_{args.split}_iface.csv")
+    str_cols = {c: str for c in ("iface_query", "iface_text")
+                if c in pd.read_csv(path, nrows=0).columns}
+    df = pd.read_csv(path, dtype=str_cols)
     nC = len(df)
     prot_struct = prot_msa = both_struct = prot_either = 0
     for _, row in df.iterrows():
