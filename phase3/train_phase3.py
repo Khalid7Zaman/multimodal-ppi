@@ -111,6 +111,9 @@ def main():
     ap.add_argument("--struct_layers", type=int, default=2,
                     help="number of structure-encoder layers (capacity knob)")
     ap.add_argument("--log_every", type=int, default=50)
+    ap.add_argument("--ppb_dir", default=None,
+                    help="directory holding ppb_<split>_iface.csv; default is the standard PPB dir. "
+                         "Point it at the leakage-free re-split to train and score on the clean data.")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -143,7 +146,7 @@ def main():
         print(f"backbone FROZEN: training {n_tr:,} / {n_all:,} params ({100*n_tr/n_all:.1f}%)", flush=True)
 
     train_ds = PPBComplexData("train", tok, max_length=args.max_length,
-                              use_msa=use_msa, use_struct=use_struct)
+                              use_msa=use_msa, use_struct=use_struct, ppb_dir=args.ppb_dir)
     if args.limit:
         train_ds = Subset(train_ds, list(range(args.limit)))
     train_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=True, collate_fn=collate, num_workers=2)
@@ -151,7 +154,7 @@ def main():
         val_dl = DataLoader(train_ds, batch_size=args.batch, shuffle=False, collate_fn=collate)
     else:
         val_dl = DataLoader(PPBComplexData("val", tok, max_length=args.max_length,
-                                           use_msa=use_msa, use_struct=use_struct),
+                                           use_msa=use_msa, use_struct=use_struct, ppb_dir=args.ppb_dir),
                             batch_size=args.batch, shuffle=False, collate_fn=collate, num_workers=2)
 
     opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr)
@@ -192,7 +195,7 @@ def main():
     if not args.overfit:
         model.load_state_dict(torch.load(os.path.join(args.out, "best.pt"), map_location=device))
         test_dl = DataLoader(PPBComplexData("test", tok, max_length=args.max_length,
-                                            use_msa=use_msa, use_struct=use_struct),
+                                            use_msa=use_msa, use_struct=use_struct, ppb_dir=args.ppb_dir),
                              batch_size=args.batch, shuffle=False, collate_fn=collate, num_workers=2)
         trmse, tpear, taupr = evaluate(model, test_dl, device)
         print(f"TEST (best checkpoint) | views {views} | affinity RMSE {trmse:.3f} Pearson {tpear:.3f} | "
@@ -201,7 +204,7 @@ def main():
             json.dump({"seed": args.seed, "backbone": args.backbone, "views": views,
                        "use_struct": use_struct, "use_msa": use_msa, "fusion": args.fusion,
                        "freeze_backbone": args.freeze_backbone, "d_model": args.d_model,
-                       "struct_layers": args.struct_layers,
+                       "struct_layers": args.struct_layers, "ppb_dir": args.ppb_dir,
                        "rmse": trmse, "pearson": tpear, "aupr": taupr}, f, indent=2)
 
 
