@@ -31,7 +31,9 @@ def main():
     args = ap.parse_args()
 
     man_path = os.path.join(os.path.expanduser(args.data), "phase_c", "experimental_manifest.csv")
-    man = pd.read_csv(man_path, dtype={"protein_a_id": str, "protein_b_id": str})
+    man = pd.read_csv(man_path, low_memory=False,
+                      dtype={"protein_a_id": str, "protein_b_id": str,
+                             "pdb": str, "receptor_chains": str, "ligand_chains": str})
 
     # mmseqs easy-cluster writes: representative <tab> member, no header.
     cl = pd.read_csv(args.clusters, sep="\t", header=None, names=["rep", "member"],
