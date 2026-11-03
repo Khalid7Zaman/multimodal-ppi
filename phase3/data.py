@@ -51,12 +51,17 @@ def _contact_map_for(model, seq, chain_ids, threshold=8.0):
 
 class PPBComplexData(Dataset):
     def __init__(self, split, tokenizer, max_length=512, contact_threshold=8.0,
-                 use_msa=True, use_struct=True):
+                 use_msa=True, use_struct=True, ppb_dir=None):
         # Read the interface-label columns as strings. They are long digit-only strings
         # (e.g. "000110..."); otherwise newer pandas infers the column as an integer and
         # overflows on the large value ("int too large to convert to float"). Peek at the
         # header first so we only set dtype for columns that actually exist in this split.
-        _path = os.path.join(PPB, f"ppb_{split}_iface.csv")
+        # ppb_dir overrides the default PPB directory, so the model can be trained and
+        # evaluated on a different split (for example the leakage-free re-split) without
+        # touching the original CSVs. The structure and MSA lookups are unchanged, since
+        # they are keyed by the pdb id and the sequence, which the re-split preserves.
+        _dir = ppb_dir or PPB
+        _path = os.path.join(_dir, f"ppb_{split}_iface.csv")
         _str_cols = {c: str for c in ("iface_query", "iface_text")
                      if c in pd.read_csv(_path, nrows=0).columns}
         self.df = pd.read_csv(_path, dtype=_str_cols).reset_index(drop=True)
