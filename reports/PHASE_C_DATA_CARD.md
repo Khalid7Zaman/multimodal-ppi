@@ -69,10 +69,40 @@ than a little near-duplication across the affinity splits, the clean fix is a cl
 affinity data. That change would alter the affinity evaluation set, so it is one to agree with the supervisor
 before it is made.
 
+## Identity-threshold audit result (2026-11-03)
+
+The audit was run with `phase_c/leakage_audit.sh`, which clusters the proteins with mmseqs2 at 30 percent
+sequence identity and 80 percent coverage, then compares the test split against train and validation at the
+cluster level. The 20,534 proteins formed 11,469 clusters, so 44.1 percent of proteins sit in a cluster with
+at least one other protein.
+
+The interaction data stays clean at the near-duplicate level. Of 3,022 test proteins only 10 (0.3 percent)
+share a cluster with a train or validation protein, and no test pair matches a train or validation pair at the
+cluster level. The interaction benchmark is therefore sound.
+
+The affinity data shows substantial near-duplicate leakage that the exact-match check did not reveal. Of 1,373
+test proteins, 516 (37.6 percent) share a cluster with a train or validation protein, and 62 of 751 test pairs
+(8.3 percent) match a train or validation pair at the cluster level. So more than a third of the affinity test
+proteins have a close homolog in training, and about one in twelve test pairs is a near-duplicate of a training
+pair.
+
+What this means. The affinity evaluation numbers reported so far, including the Phase 3 and Phase 5 figures,
+were measured on this split and so carry an optimistic bias of unknown size, because the model was scored
+partly on near-duplicates of what it trained on. This does not affect the interaction benchmark, which is the
+headline result and is clean.
+
+Recommended action. Produce a cluster-based re-split of the affinity data that keeps every cluster wholly
+inside one split, so that no test protein has a homolog in training, and retrain the affinity model on the
+clean split to get honest numbers. This will change the affinity evaluation set and will most likely lower the
+reported affinity metrics. Because it changes numbers that are already on the manuscript track, it is a
+decision to take to the supervisor, presented with the old and new numbers side by side so the change is
+transparent.
+
 ## Reproduce
 
 From `~/Projects/multimodal-ppi`, with a pandas and numpy environment active:
 
-    python phase_c/build_experimental_manifest.py
+    python phase_c/build_experimental_manifest.py          # block one: the manifest
+    bash   phase_c/leakage_audit.sh                         # the identity-threshold audit
 
 The outputs are written under `~/Projects/ppi-data/phase_c/`.
