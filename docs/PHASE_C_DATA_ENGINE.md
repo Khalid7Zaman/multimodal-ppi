@@ -52,13 +52,15 @@ sampled non-interacting pairs for the negative side. Three established databases
 - BioGRID: a large curated set of physical and genetic interactions drawn from the literature.
 - HuRI: a high-quality experimentally measured binary interactome for human proteins.
 
-The proposed starting point is human proteins only, taking confident physical interactions from STRING as
-the main positive source and treating HuRI as a smaller, higher-confidence gold set for checking. The
-organism scope is written down explicitly so that it can be widened later in a controlled way. Negative
-pairs are sampled to match the length and abundance profile of the positives, following the same care
-against trivial shortcuts that the Bernett benchmark uses. Every candidate pair, positive or negative, is
-screened against the experimental test clusters from block one and dropped if it is too similar, so the
-synthetic data can never leak into the evaluation.
+Following the supervisor's direction (meeting of 2026-11-05, Section 8), the scope is general rather than
+species-specific: pairs are drawn across organisms, not restricted to human, because a general model is more
+novel than a species-specific one. STRING, which spans many organisms, is the main positive source, with
+HuRI and BioGRID as higher-confidence checks. The breadth of organism and sequence coverage is recorded
+explicitly, since the supervisor asks that the synthetic data cover more sequence space than the experimental
+data. Negative pairs are sampled to match the length and abundance profile of the positives, following the
+same care against trivial shortcuts that the Bernett benchmark uses. Every candidate pair, positive or
+negative, is screened against the experimental test clusters from block one and dropped if it is too similar,
+so the synthetic data can never leak into the evaluation.
 
 The output of block two is a candidate pair list with provenance for every pair, already de-leaked against
 the experimental test set. This block also needs no GPU.
@@ -139,3 +141,32 @@ candidate pair list, and synthetic label tables from distillation and from simul
 provenance and weights. These are exactly the inputs the staged training in Phase D needs in order to
 preheat the fitting network on the synthetic data and then fine-tune it on the experimental ground truth,
 and to compare that two-stage regime against the auxiliary-task regime.
+
+## 8. Supervisor decisions (meeting of 2026-11-05)
+
+The five open decisions of Section 5 were put to the supervisor. His answers are recorded here and now
+drive the work.
+
+- Experimental affinity treatment: approved. The consolidation and the leakage-free re-split of the
+  affinity data are accepted, so the affinity model is retrained on the clean split for honest numbers.
+- Representation and freezing: confirmed. The language model (ESM-C) is the only pretrained part and is
+  treated as the representation foundation, frozen in the downstream tasks. The honest-numbers retrain on
+  the clean split is therefore run with the backbone frozen, matching the adopted design.
+- Organism scope: general, not species-specific. The model and its data should cover all situations across
+  organisms, because a general model is more novel than a human-only one. Block two is widened accordingly.
+- Simulation data: a colleague (Yucheng Han) will help generate the MM/GBSA data. The supervisor holds a
+  copy of the EnsPlex docking dataset and will try to bring it to the cluster in the coming weeks. So the
+  simulation labels are a collaboration, not something built from scratch here.
+- Distillation teachers: the supervisor will do his own literature review on which PPI predictor is current
+  state of the art. The shortlist already gathered (sequence-only, released, offline: ProteinAffinityKD for
+  affinity; D-SCRIPT or Topsy-Turvy, or SENSE-PPI, for interaction; PPB-Affinity baseline as a structure
+  based cross-check) is kept as input to that review. No teacher is fixed yet.
+- Label type: the synthetic labels can be affinity and, or other properties tied to the prediction targets.
+- Scale and coverage: the synthetic data should be at least an order of magnitude larger than the
+  experimental data, and should cover more sequence space than the experimental data.
+
+The immediate task the supervisor assigned follows from the scale and coverage point: analyse the sequence
+coverage of the current experimental data first, and prepare a sequence dataset for the synthetic data
+generation. `phase_c/sequence_coverage.py` does the analysis and writes the seed sequence set; the full
+candidate set at the required scale is then built in block two once the interaction database is chosen and
+the simulation pipelines (MM/GBSA from the colleague, EnsPlex docking from the supervisor) are in place.
