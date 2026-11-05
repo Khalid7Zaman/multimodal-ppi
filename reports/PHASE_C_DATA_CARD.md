@@ -98,11 +98,38 @@ reported affinity metrics. Because it changes numbers that are already on the ma
 decision to take to the supervisor, presented with the old and new numbers side by side so the change is
 transparent.
 
+## Sequence coverage and the synthetic-data target (2026-11-05)
+
+Following the supervisor's instruction to analyse the sequence coverage before generating synthetic data,
+`phase_c/sequence_coverage.py` measured the sequence space the experimental data covers, using the same 30
+percent identity clustering.
+
+Across both sources there are 20,534 unique proteins in 11,469 clusters. The experimental affinity set, which
+the synthetic affinity data must exceed, contains 8,045 complexes built from 9,516 proteins, but those
+proteins fall into only 1,814 clusters, and the complexes cover 1,428 distinct cluster-pairs. In other words
+the affinity proteins are highly redundant, on the order of five proteins per cluster, which is the direct
+reason the original split leaked so heavily.
+
+From the supervisor's two requirements this gives concrete targets for the synthetic data. It should be at
+least ten times the experimental size, which is at least 80,450 pairs, and it should cover more sequence space
+than the experimental data, which means more than 1,814 protein clusters and more than 1,428 distinct
+cluster-pairs.
+
+Protein length ranges from 40 to 34,350 residues, with a median of 329. The few very long entries are
+multi-chain complexes concatenated into one sequence, and they will be difficult for structure prediction and
+physical scoring, so the structure-based part of the synthetic generation will likely need a length limit.
+
+The seed sequence set, the 9,516 experimental affinity proteins, was written to
+`~/Projects/ppi-data/phase_c/affinity_proteins.fasta`. This is the starting pool. Reaching the size and
+coverage targets above is the job of block two, which pairs proteins across organisms, guided by an
+interaction database.
+
 ## Reproduce
 
 From `~/Projects/multimodal-ppi`, with a pandas and numpy environment active:
 
     python phase_c/build_experimental_manifest.py          # block one: the manifest
     bash   phase_c/leakage_audit.sh                         # the identity-threshold audit
+    python phase_c/sequence_coverage.py                     # coverage + synthetic-data targets
 
 The outputs are written under `~/Projects/ppi-data/phase_c/`.
