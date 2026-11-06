@@ -124,6 +124,32 @@ The seed sequence set, the 9,516 experimental affinity proteins, was written to
 coverage targets above is the job of block two, which pairs proteins across organisms, guided by an
 interaction database.
 
+## Clean-split retrain result (2026-11-06)
+
+The affinity model was retrained on the leakage-free split with the frozen width-512 configuration, which is
+the design the supervisor confirmed, over three seeds, with everything except the split identical to the
+Phase B frozen width-512 run. Runs are in `phase3/runs/mm_esmc_clean_frozen_d512_s*`.
+
+| Metric | Frozen width-512, original (leaky) split | Frozen width-512, clean split |
+|---|---|---|
+| affinity Pearson (higher better) | 0.411 +/- 0.010 | 0.421 +/- 0.052 |
+| affinity RMSE (lower better) | 1.574 +/- 0.031 | 1.876 +/- 0.055 |
+| interface AUPR (higher better) | 0.299 +/- 0.008 | 0.342 +/- 0.008 |
+
+Reading, with one caveat stated first. The re-split changed which complexes sit in the test set, so this is
+the honest result on a leakage-free split rather than a strict single-variable before-and-after on one fixed
+test set. With that in mind, the clearest effect of removing the leakage is on the absolute affinity error:
+the RMSE rose from about 1.57 to about 1.88, which is the expected direction, because the earlier figure was
+flattered by near-duplicate test proteins. The ranking correlation (Pearson) is about the same, 0.411 against
+0.421, but much noisier across seeds now (the spread runs from 0.373 to 0.476), which reflects a smaller and
+more varied honest test set. The interface AUPR is measured on a different set of complexes after the
+re-split, so it is not directly comparable and the apparent rise is not claimed as a real gain.
+
+The honest conclusion is that the leakage mainly inflated the absolute affinity accuracy, not the ranking.
+These clean numbers (Pearson 0.421, RMSE 1.876, interface AUPR 0.342) are adopted as the trustworthy affinity
+baseline going forward, and the earlier RMSE is understood as optimistic. This is also the honest starting
+point that the Phase D preheating stage, trained on the synthetic data, is meant to improve.
+
 ## Reproduce
 
 From `~/Projects/multimodal-ppi`, with a pandas and numpy environment active:
