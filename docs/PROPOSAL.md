@@ -1,6 +1,6 @@
 # A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal, **v17**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> Research Proposal, **v18**. Mirrored into the repo (`docs/PROPOSAL.md`) from
 > `17. Research_Proposal_PPI_v17 (Start working on this project) .docx` so every session/tab can read it.
 > Model name: **TriWeave**. Sequence backbone: **ESM-C** (selected over ESM-2 by a controlled ablation).
 > v13 folded in the supervisor's data and training direction: frozen pretrained foundations with a
@@ -11,6 +11,9 @@
 > and screening direction stays as the deferred vision. **v16** completes the STRING reference and notes the
 > Phase B freeze-versus-fine-tune result in Section 6.3. **v17** adds Section 6.6 and Table 3, the staged
 > A-to-F roadmap (so the implementation plan now carries Phase B, Phase C and the rest, not only phases 0-6).
+> **v18** records that Phase C is now in progress: its first two blocks are complete, the experimental
+> foundation consolidated and made leakage-free, and a candidate interacting-pair set built from STRING
+> across fifteen organisms at the planned scale (Section 6.6).
 > The data and training strategy is in `docs/ROADMAP.md`.
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
@@ -250,18 +253,27 @@ throughout. It moves in phases (Table 1), and each phase ends in a working resul
 The phases in Table 1 built and validated the protein-protein interaction model, the proof of concept.
 Following a review with the supervisor, the project now follows a staged, frozen-foundation plan that puts
 the data and training strategy of this section into a clear order. Table 3 sets out these phases. Phases A
-and B are complete, and Phase C, the data engine, is the immediate next step.
+and B are complete, and Phase C, the data engine, is in progress, with its first two blocks done.
 
-**Table 3. Staged roadmap following the supervisor review.** Phases A and B are complete; Phase C is next.
+**Table 3. Staged roadmap following the supervisor review.** Phases A and B are complete; Phase C is in progress.
 
 | Phase | Goal | Status |
 |---|---|---|
 | A | TriWeave protein model: interaction, binding affinity and interface residues, on the frozen ESM-C backbone. | Complete |
 | B | Freeze the representation foundations (the freeze-versus-fine-tune question, settled in favour of freezing) and allow AlphaFold-predicted structures for coverage. | Complete (freezing adopted) |
-| C | Data engine: consolidate the experimental database, choose the interaction database that guides pair selection, and generate synthetic labels from physical simulation (MM/GBSA or docking) and from distillation of strong models. | Next |
+| C | Data engine: consolidate the experimental database, choose the interaction database that guides pair selection, and generate synthetic labels from physical simulation (MM/GBSA or docking) and from distillation of strong models. | In progress (blocks one and two done) |
 | D | Staged training: preheat the fitting network on the synthetic and distilled data, then fine-tune on experimental data, and compare this against the auxiliary-task regime. | Planned |
 | E | Multi-task machinery: mixture-of-experts (MMoE, HoME, FDN) and gradient projection (PCGrad) to reduce conflict between the tasks. | Planned |
 | F | Protein-ligand binding and virtual screening, using the same frozen-foundation design. | Later extension |
+
+Within Phase C, the first two blocks are complete. The experimental data has been consolidated into a single
+manifest, and after a sequence-identity audit found that the binding-affinity split shared near-duplicate
+proteins between training and test, the affinity data was re-split to be leakage-free and the model retrained
+on the clean split to give honest numbers. The candidate interacting-pair set for the synthetic data has then
+been built from the high-confidence physical interactions in STRING across fifteen organisms spanning the tree
+of life, screened against the test set so the synthetic data cannot leak into evaluation, giving a pool well
+above the planned scale. What remains in Phase C is the synthetic labelling itself, from physical simulation
+and from distillation, which proceeds with the group's collaborators.
 
 ## 7. Novelty and Contributions
 
