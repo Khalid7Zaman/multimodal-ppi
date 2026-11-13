@@ -48,6 +48,9 @@ def main():
     ap.add_argument("--max_length", type=int, default=1022,
                     help="truncate sequences to this many residues for embedding")
     ap.add_argument("--batch", type=int, default=8)
+    ap.add_argument("--max_n", type=int, default=None,
+                    help="randomly sample at most this many proteins (seeded), to keep the job short")
+    ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -58,6 +61,14 @@ def main():
 
     ids, seqs = read_fasta(args.fasta)
     print(f"{len(ids):,} proteins from {args.fasta}", flush=True)
+    if args.max_n and len(ids) > args.max_n:
+        import random
+        idx = list(range(len(ids)))
+        random.Random(args.seed).shuffle(idx)
+        idx = sorted(idx[:args.max_n])
+        ids = [ids[i] for i in idx]
+        seqs = [seqs[i] for i in idx]
+        print(f"randomly sampled {len(ids):,} proteins (seed {args.seed}) to keep the job short", flush=True)
 
     # sort by length so each padded batch is tight (faster), remember the original order
     order = sorted(range(len(seqs)), key=lambda i: len(seqs[i]))
