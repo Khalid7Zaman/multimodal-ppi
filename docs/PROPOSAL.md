@@ -1,6 +1,6 @@
 # A Multimodal Deep-Learning Framework for Predicting Protein-Protein Interactions and Their Drug-Relevant Properties
 
-> Research Proposal, **v18**. Mirrored into the repo (`docs/PROPOSAL.md`) from
+> Research Proposal, **v19**. Mirrored into the repo (`docs/PROPOSAL.md`) from
 > `17. Research_Proposal_PPI_v17 (Start working on this project) .docx` so every session/tab can read it.
 > Model name: **TriWeave**. Sequence backbone: **ESM-C** (selected over ESM-2 by a controlled ablation).
 > v13 folded in the supervisor's data and training direction: frozen pretrained foundations with a
@@ -13,7 +13,10 @@
 > A-to-F roadmap (so the implementation plan now carries Phase B, Phase C and the rest, not only phases 0-6).
 > **v18** records that Phase C is now in progress: its first two blocks are complete, the experimental
 > foundation consolidated and made leakage-free, and a candidate interacting-pair set built from STRING
-> across fifteen organisms at the planned scale (Section 6.6).
+> across fifteen organisms at the planned scale (Section 6.6). **v19** adds that the synthetic data is judged
+> on sequence-space coverage and workflow fidelity, not only sample size, that additional measured properties
+> serve as auxiliary tasks, and that the aim is to identify and design impactful, novel targets for
+> experimental validation (Sections 6.2 and 6.6).
 > The data and training strategy is in `docs/ROADMAP.md`.
 > Author: Khalid Zaman (RAP). Supervisor: Prof. Zhaoxi Sun, SUAT.
 > Source `.docx` location on the laptop:
@@ -191,7 +194,11 @@ interaction predictors are distilled by taking their predictions as extra labels
 by a reported-interaction database, such as STRING, BioGRID or HuRI [15], so that the generated pairs are
 plausible rather than random, since most protein pairs do not interact. These generated labels are cheap
 and abundant, while the experimental measurements remain the ground truth for fine-tuning and for
-evaluation.
+evaluation. The synthetic data is judged not only on sample size but on how well it covers the sequence space
+of the experimental data and extends beyond it, and on the fidelity of each generation workflow, measured by
+how well its values correlate with experimental affinities. Where additional measured properties of the
+proteins or complexes are available, they are added as auxiliary prediction tasks, since properties correlated
+with binding can aid the affinity task through transfer learning.
 
 ### 6.3 Model and training
 
@@ -253,9 +260,12 @@ throughout. It moves in phases (Table 1), and each phase ends in a working resul
 The phases in Table 1 built and validated the protein-protein interaction model, the proof of concept.
 Following a review with the supervisor, the project now follows a staged, frozen-foundation plan that puts
 the data and training strategy of this section into a clear order. Table 3 sets out these phases. Phases A
-and B are complete, and Phase C, the data engine, is in progress, with its first two blocks done.
+and B are complete, and Phase C, the data engine, is in progress, with its first two blocks done. The
+ultimate aim of the staged plan is not only accurate prediction but the identification and design of
+impactful, novel protein targets, to be taken forward for experimental validation in collaboration with
+experimental groups.
 
-**Table 3. Staged roadmap following the supervisor review.** Phases A and B are complete; Phase C is in progress.
+**Table 3. Staged roadmap following the supervisor review.** Phases A and B are complete, Phase C is in progress.
 
 | Phase | Goal | Status |
 |---|---|---|
