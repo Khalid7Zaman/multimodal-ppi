@@ -3,8 +3,8 @@
 #SBATCH --partition=gpu_3080ti,gpu_5080,gpu_5070ti,gpu_5090,gpu_6000D
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
-#SBATCH --time=00:40:00
+#SBATCH --mem=24G
+#SBATCH --time=03:00:00
 #SBATCH --output=phase3/logs/embcov_%A.out
 
 # Phase C: sequence-space coverage analysis.
@@ -21,8 +21,8 @@ PC="$HOME/Projects/ppi-data/phase_c"
 echo "=== embedding experimental proteins ==="
 python phase_c/embed_proteins.py --fasta "$PC/proteins.fasta" --out "$PC/emb_experimental"
 
-echo "=== embedding synthetic (candidate) proteins, a 20,000 representative sample ==="
-python phase_c/embed_proteins.py --fasta "$PC/candidate_proteins.fasta" --out "$PC/emb_synthetic" --max_n 20000
+echo "=== embedding synthetic (candidate) proteins (full set) ==="
+python phase_c/embed_proteins.py --fasta "$PC/candidate_proteins.fasta" --out "$PC/emb_synthetic"
 
 echo "=== sequence-space coverage analysis ==="
 python phase_c/coverage_analysis.py --exp "$PC/emb_experimental" --syn "$PC/emb_synthetic" --out "$PC"
