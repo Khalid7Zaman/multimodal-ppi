@@ -101,6 +101,7 @@ def main():
     print(f"rows: {len(df):,}   delimiter: '{sep}'   columns: {len(cols)}")
 
     # locate columns (robust to the exact header spelling and to optional parsed columns)
+    c_pdb = find_col(cols, "pdb") or cols[0]
     c_aff_wt = find_col(cols, "affinity_wt") or find_col(cols, "affinity", "wt")
     c_aff_mt = find_col(cols, "affinity_mut") or find_col(cols, "affinity", "mut")
     c_kon_wt = find_col(cols, "kon_wt") or find_col(cols, "kon", "wt")
@@ -135,18 +136,25 @@ def main():
     tds_wt = (T * ds_wt) / 1000.0  # cal/mol/K times K -> cal/mol -> kcal/mol
     dg_from_hs = dh_wt - tds_wt     # thermodynamic identity check
 
-    print(f"\nproperty availability (entries with a usable wild-type value):")
-    for lab, v in [("affinity (Kd)", kd_wt), ("kon", kon_wt), ("koff", koff_wt),
-                   ("dH", dh_wt), ("dS", ds_wt)]:
-        print(f"  {lab:>14}: {int(np.isfinite(v).sum()):>6,}")
+    # The across-complex correlations must count each complex once. In SKEMPI the same complex
+    # repeats on one row per mutation, with the same wild-type values, so we collapse to the first
+    # row of each complex before correlating the wild-type properties.
+    wt = pd.DataFrame({"cid": df[c_pdb].astype(str), "dg": dg_wt, "log_koff": log_koff_wt,
+                       "log_kon": log_kon_wt, "dh": dh_wt, "tds": tds_wt, "dg_hs": dg_from_hs})
+    wtd = wt.drop_duplicates(subset="cid", keep="first")
+    print(f"\ndistinct complexes (by PDB id): {wtd['cid'].nunique():,} of {len(df):,} rows")
+    print(f"property availability at the distinct-complex level (usable wild-type value):")
+    for lab, c in [("affinity (dG)", "dg"), ("kon", "log_kon"), ("koff", "log_koff"),
+                   ("dH", "dh"), ("dS/TdS", "tds")]:
+        print(f"  {lab:>14}: {int(np.isfinite(wtd[c]).sum()):>6,}")
 
-    # ---- correlations of each measured property with affinity (wild type, across complexes) ----
+    # ---- correlations of each measured property with affinity (wild type, one row per complex) ----
     rows = []
-    rows.append(corr_row("log10(koff) vs dG", log_koff_wt, dg_wt))
-    rows.append(corr_row("log10(kon) vs dG", log_kon_wt, dg_wt))
-    rows.append(corr_row("dH vs dG", dh_wt, dg_wt))
-    rows.append(corr_row("T*dS vs dG", tds_wt, dg_wt))
-    rows.append(corr_row("(dH - T*dS) vs dG", dg_from_hs, dg_wt))
+    rows.append(corr_row("log10(koff) vs dG", wtd["log_koff"], wtd["dg"]))
+    rows.append(corr_row("log10(kon) vs dG", wtd["log_kon"], wtd["dg"]))
+    rows.append(corr_row("dH vs dG", wtd["dh"], wtd["dg"]))
+    rows.append(corr_row("T*dS vs dG", wtd["tds"], wtd["dg"]))
+    rows.append(corr_row("(dH - T*dS) vs dG", wtd["dg_hs"], wtd["dg"]))
 
     # ---- mutation effect: does the CHANGE in each property track the change in affinity ----
     ddg = dg_mt - dg_wt
@@ -175,12 +183,12 @@ def main():
                     transform=ax.transAxes, fontsize=9, va="top")
 
     fig, ax = plt.subplots(1, 4, figsize=(19, 4.4))
-    panel(ax[0], log_koff_wt, dg_wt, "log10 koff (1/s)", "binding dG (kcal/mol)",
-          "Dissociation rate vs affinity")
-    panel(ax[1], log_kon_wt, dg_wt, "log10 kon (1/M/s)", "binding dG (kcal/mol)",
-          "Association rate vs affinity")
-    panel(ax[2], dg_from_hs, dg_wt, "dH - T*dS (kcal/mol)", "binding dG (kcal/mol)",
-          "Thermodynamics vs affinity")
+    panel(ax[0], wtd["log_koff"].to_numpy(), wtd["dg"].to_numpy(), "log10 koff (1/s)",
+          "binding dG (kcal/mol)", "Dissociation rate vs affinity")
+    panel(ax[1], wtd["log_kon"].to_numpy(), wtd["dg"].to_numpy(), "log10 kon (1/M/s)",
+          "binding dG (kcal/mol)", "Association rate vs affinity")
+    panel(ax[2], wtd["dg_hs"].to_numpy(), wtd["dg"].to_numpy(), "dH - T*dS (kcal/mol)",
+          "binding dG (kcal/mol)", "Thermodynamics vs affinity")
     panel(ax[3], dlog_koff, ddg, "d log10 koff upon mutation", "ddG upon mutation (kcal/mol)",
           "Mutation: koff change vs affinity change")
     fig.tight_layout()
