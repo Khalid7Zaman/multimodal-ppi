@@ -170,8 +170,9 @@ def main():
     if args.mode in ("benchmark", "pairs"):
         seqs = read_fasta(args.fasta)
         pairs = pd.read_csv(args.pairs, dtype={"protein1_id": str, "protein2_id": str})
-        if args.mode == "benchmark" and args.limit:
-            pairs = pairs.head(args.limit)
+        if args.mode == "benchmark" and args.limit and len(pairs) > args.limit:
+            # random (seeded) sample, so timing and the spread of predictions are representative
+            pairs = pairs.sample(n=args.limit, random_state=0).reset_index(drop=True)
         jobs = []
         miss = 0
         for _, r in pairs.iterrows():
@@ -201,14 +202,15 @@ def main():
         if args.mode == "benchmark":
             allp = pd.read_csv(args.pairs, dtype={"protein1_id": str, "protein2_id": str})
             all_prot = set(allp["protein1_id"]) | set(allp["protein2_id"])
-            per = ft / max(nu, 1)
-            full_feat_h = per * len(all_prot) / 3600.0
+            per_wall = ft / max(nu, 1)                   # wall seconds per protein at `workers`
+            wall_h = per_wall * len(all_prot) / 3600.0   # wall-clock hours at `workers`
+            core_h = wall_h * max(args.workers, 1)
             print("\n--- cost extrapolation to the full candidate set ---")
             print(f"  full set: {len(allp):,} pairs over {len(all_prot):,} unique proteins")
-            print(f"  feature cost dominates: {per:.3f}s/protein x {len(all_prot):,} proteins")
-            print(f"  = {full_feat_h:.1f} core-hours at {args.workers} workers -> "
-                  f"about {full_feat_h / max(args.workers,1):.1f} wall-clock hours; "
-                  f"prediction itself is negligible")
+            print(f"  feature throughput: {max(nu,1)/ft:.2f} proteins/s at {args.workers} workers "
+                  f"({per_wall:.3f} wall-s/protein); the model forward pass is negligible")
+            print(f"  full set -> about {wall_h:.1f} wall-clock hours at {args.workers} workers "
+                  f"(~{core_h:.0f} core-hours). More cores or nodes cut the wall time proportionally.")
         return
 
     # validate: teacher prediction vs measured pKd on the experimental pairs
@@ -216,6 +218,8 @@ def main():
     df = pd.read_csv(args.exp_csv)
     df = df[pd.to_numeric(df["pKd"], errors="coerce").notna()].copy()
     df["pKd"] = df["pKd"].astype(float)
+    if args.limit and len(df) > args.limit:
+        df = df.sample(n=args.limit, random_state=0).reset_index(drop=True)
     jobs = [(str(i) + "L", r["seq_ligand"], str(i) + "R", r["seq_receptor"])
             for i, r in df.iterrows()]
     needed = [s for (_, s, _, s2) in jobs for s in (s, s2)]
