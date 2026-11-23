@@ -32,3 +32,8 @@ phase2/*.out
 
 # Local scratch (never part of the repo)
 scratch/
+
+# Private documents: kept on the laptop only, never uploaded
+docs/PROPOSAL.md
+docs/ROADMAP.md
+docs/PHASE_C_DATA_ENGINE.md
